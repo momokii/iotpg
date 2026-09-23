@@ -22,11 +22,9 @@ First hardware live — ESP32 board connected and running blink firmware.
 
 ## In Progress
 
-- [ ] TASK-002 physical confirmation: user reported only the red power LED is
-  on — breadboard lamp is dark, so it is NOT on GPIO5. `firmware/pin_sweep`
-  is flashed and running (16 safe GPIOs, 4 s HIGH each, repeating; verified
-  cycling on monitor). Awaiting user report of when the lamp lights (or the
-  pin label read off the board silkscreen). Then lock blink to that pin.
+- [x] TASK-002 DONE: blink locked to GPIO2 (onboard blue LED), 5 s on/off,
+  verified on monitor timestamps, user confirmed visible. Breadboard lamp pin
+  still unidentified — open question for a future session.
 
 ## Blocked
 
