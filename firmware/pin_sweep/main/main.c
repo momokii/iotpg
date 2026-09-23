@@ -4,8 +4,10 @@
  * active pin. Watch the lamp: when it lights steadily, the pin in the latest
  * "GPIO x ON" monitor line is your lamp pin.
  *
- * Candidate set avoids strapping pins (0, 2, 12, 15), UART (1, 3) and
- * SPI-flash pins (6-11) so sweeping can never break boot or serial.
+ * Candidate set covers all safe GPIOs plus strapping pins 0, 2, 12, 15
+ * (driven only at runtime — strapping is sampled at reset while pins are
+ * high-Z, so this cannot break boot). UART (1, 3) and SPI-flash pins (6-11)
+ * are excluded to protect serial and boot.
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -16,10 +18,11 @@
 static const char *TAG = "pin_sweep";
 
 static const gpio_num_t PINS[] = {
-    GPIO_NUM_5,
+    GPIO_NUM_5, GPIO_NUM_2,
     GPIO_NUM_4, GPIO_NUM_13, GPIO_NUM_14, GPIO_NUM_16, GPIO_NUM_17,
     GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23,
     GPIO_NUM_25, GPIO_NUM_26, GPIO_NUM_27, GPIO_NUM_32, GPIO_NUM_33,
+    GPIO_NUM_0, GPIO_NUM_12, GPIO_NUM_15,
 };
 #define PIN_COUNT (sizeof(PINS) / sizeof(PINS[0]))
 #define HOLD_TIME pdMS_TO_TICKS(4000)
