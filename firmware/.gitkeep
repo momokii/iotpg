@@ -1,0 +1,2 @@
+# Keeps firmware/ tracked while empty. One IDF project per subdirectory, e.g.
+# firmware/blink/ (CMakeLists.txt + main/ + main/CMakeLists.txt).

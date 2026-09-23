@@ -1,0 +1,31 @@
+# Secrets — never commit real values
+.env
+.env.staging
+.env.production
+.env.local
+!.env.example
+
+# Dependencies (uncomment for your stack once known)
+# node_modules/
+# vendor/
+# __pycache__/
+# .venv/
+
+# Build output
+# dist/
+# build/
+# out/
+
+# ESP-IDF firmware artifacts (per project under firmware/)
+firmware/*/build/
+firmware/*/sdkconfig
+firmware/*/sdkconfig.old
+firmware/*/dependencies.lock
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
