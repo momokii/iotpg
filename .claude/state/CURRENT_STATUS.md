@@ -22,9 +22,11 @@ First hardware live — ESP32 board connected and running blink firmware.
 
 ## In Progress
 
-- [ ] TASK-002 physical confirmation: user to verify the breadboard lamp itself
-  blinks (vs only the onboard LED) and report which pin the lamp is wired to.
-  If lamp is not on GPIO5, switch `CONFIG_BLINK_GPIO` and re-flash.
+- [ ] TASK-002 physical confirmation: user reported only the red power LED is
+  on — breadboard lamp is dark, so it is NOT on GPIO5. `firmware/pin_sweep`
+  is flashed and running (16 safe GPIOs, 4 s HIGH each, repeating; verified
+  cycling on monitor). Awaiting user report of when the lamp lights (or the
+  pin label read off the board silkscreen). Then lock blink to that pin.
 
 ## Blocked
 
@@ -45,6 +47,6 @@ First hardware live — ESP32 board connected and running blink firmware.
 
 ## Last Updated
 
-2026-09-24 — Session: first hardware live. Board detected, blink flashed and
-confirmed running via monitor (transient early `rst:` loop cleared by itself).
-Next: user confirms physical lamp blink + lamp pin → close TASK-002.
+2026-09-24 — Session: lamp dark on GPIO5 blink → pin_sweep flashed, verified
+cycling (GPIO 5→4→13→14… on monitor). Committed as 5afa0ec.
+Next: user reports when lamp lights → lock blink to that pin, re-flash.
