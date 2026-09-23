@@ -1,6 +1,6 @@
 ## Project Phase
 
-Toolchain ready — ESP32 firmware playground bootstrapped. No hardware yet.
+First hardware live — ESP32 board connected and running blink firmware.
 
 ## Completed
 
@@ -13,29 +13,38 @@ Toolchain ready — ESP32 firmware playground bootstrapped. No hardware yet.
 - [x] `scripts/setup-esp32.sh` created — reproduces full setup on any new machine
 - [x] `.claude/` updated with ESP-IDF project context (README, CODING_STANDARDS,
   ENVIRONMENT_GUIDE) + `.gitignore` covers firmware build artifacts
+- [x] TASK-001: board detected as `/dev/ttyUSB0` (CP2102), chip ESP32-D0WD-V3
+  rev 3.1, user already in `dialout`
+- [x] TASK-002: `firmware/blink` (GPIO5, 1 s period) built, flashed,
+  hash-verified; monitor confirmed app running ("Turning the LED" ~1/sec).
+  Note: an early transient `rst:` reboot loop cleared on its own — suspected
+  flaky breadboard contact at monitor attach, not firmware.
 
 ## In Progress
 
-- [ ] Awaiting ESP32 board arrival / user direction for first firmware project
+- [ ] TASK-002 physical confirmation: user to verify the breadboard lamp itself
+  blinks (vs only the onboard LED) and report which pin the lamp is wired to.
+  If lamp is not on GPIO5, switch `CONFIG_BLINK_GPIO` and re-flash.
 
 ## Blocked
 
-- Flash/monitor verification blocked on hardware: no `/dev/ttyUSB*` device
-  present. Build-only verification done; `idf.py flash` runs when board arrives.
+## Blocked
+
+- TASK-002 physical confirmation needs the user's eyes: is the breadboard lamp
+  itself blinking, and which pin is it wired to? Firmware side is proven working.
 
 ## Open Questions
 
-- Which ESP32 variant will arrive (classic ESP32, S3, C3)? Affects `set-target`.
-- First firmware project scope (blink/GPIO → Wi-Fi → sensors?)
+- Breadboard lamp pin (user unsure) — currently firmware blinks GPIO5.
+- Board variant confirmed: classic ESP32 (ESP32-D0WD-V3, `set-target esp32`).
 
 ## Security Notes
 
-- No firmware written yet. Wi-Fi secrets policy set: menuconfig/Kconfig for dev
+- No network firmware yet. Wi-Fi secrets policy set: menuconfig/Kconfig for dev
   only, NVS/provisioned partition for real secrets — never hardcoded.
 
 ## Last Updated
 
-2026-09-24 — Session: ESP32 toolchain installed + verified, repo made
-self-provisioning (`scripts/setup-esp32.sh`).
-Next: plug in ESP32 board → run `idf.py -p <PORT> flash monitor` on hello_world
-→ pick first firmware project in TASK_QUEUE.md.
+2026-09-24 — Session: first hardware live. Board detected, blink flashed and
+confirmed running via monitor (transient early `rst:` loop cleared by itself).
+Next: user confirms physical lamp blink + lamp pin → close TASK-002.
