@@ -1,14 +1,13 @@
 /* Button-controlled lights: each press jumps to a random combination.
  *
- * Button on GPIO18 was chosen because it is a non-strapping, non-UART GPIO
- * verified by pin_sweep, and it is free (traffic LEDs use 21/22/23).
- * (Moved here from GPIO19 after presses on 19 never registered electrically
- * — either that pad is damaged or the label was misread. If the button works
- * on 18, the old pin was the problem.)
- * Wiring: button leg 1 -> GPIO18, leg 2 -> GND. Internal pull-up is
- * enabled, so no external resistor is needed; pressed reads as LOW.
- * Debounce: 50 ms stable-low required, press registered on release edge
- * handling via release-wait so one physical click equals one change.
+ * Uses the onboard BOOT button (GPIO0 -> GND when pressed): zero external
+ * wiring, so wiring faults are impossible. Internal pull-up is enabled;
+ * pressed reads as LOW. Debounce: 50 ms stable-low required, press
+ * registered once per physical click via release-wait.
+ * NOTE: GPIO0 is a strapping pin — holding BOOT during reset/power-up
+ * enters download mode instead of booting the app. Press it only while
+ * the app is already running; if the board ever seems stuck, tap EN/RST
+ * without touching BOOT.
  */
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -22,7 +21,7 @@ static const char *TAG = "button_lights";
 #define LED_RED     GPIO_NUM_21
 #define LED_YELLOW  GPIO_NUM_22
 #define LED_GREEN   GPIO_NUM_23
-#define BTN_GPIO    GPIO_NUM_18
+#define BTN_GPIO    GPIO_NUM_0
 
 #define DEBOUNCE_MS 50
 #define POLL_MS     10
@@ -61,7 +60,7 @@ void app_main(void)
 
     int current = 0;
     apply_combo(current);
-    ESP_LOGI(TAG, "Press the button (GPIO18 -> GND) to change combo");
+    ESP_LOGI(TAG, "Press the BOOT button to change combo");
 
     int low_streak = 0;
     int ticks = 0;
