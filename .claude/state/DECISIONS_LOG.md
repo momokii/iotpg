@@ -17,6 +17,21 @@
 
 ## Entries
 
+### 2026-09-24 — Traffic module: direct wiring beats breadboard
+
+- **Decision:** Wire the R/Y/G module to the ESP32 with female-to-female
+  jumpers (R→GPIO21, Y→GPIO22, G→GPIO23, GND→GND), skipping the breadboard.
+- **Context:** Module stayed dark through breadboard wiring across all swept
+  pins; firmware proven working via monitor + flash digest verification.
+- **Rationale:** Direct wiring eliminates rail gaps, off-by-one holes, and the
+  center divider as failure modes in one move. Lamps lit immediately.
+- **Alternatives Rejected:** Further breadboard debugging — rejected because
+  direct wiring is both the faster diagnosis and a fine permanent setup for
+  a 4-wire module.
+- **Security Implications:** None (no network, no secrets).
+- **Impact:** `firmware/traffic` mapping assumption 21=R/22=Y/23=G held;
+  user to confirm visible color order.
+
 ### 2026-09-24 — ESP32 toolchain: ESP-IDF v6.1, CLI-only
 
 - **Decision:** Use Espressif's official ESP-IDF v6.1 directly (idf.py/export.sh),
