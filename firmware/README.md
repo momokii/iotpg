@@ -8,6 +8,7 @@ one README. Read the project README for wiring, behavior, and flash commands.
 | 01 | [`blink/`](blink/) | Onboard blue LED, 5 s on/off | None (onboard LED) | DONE (TASK-002) |
 | 02 | [`traffic/`](traffic/) | R/Y/G static sequence, 2 s each | R/Y/G module → GPIO 21/22/23 + GND | DONE (TASK-004) |
 | 03 | [`button_lights/`](button_lights/) | 5 animated shows, BOOT switches | Same module + onboard BOOT button | DONE (TASK-005) |
+| 04 | [`env_display/`](env_display/) | DHT11 temp/humidity on auto-discovered LCD/OLED | DHT + display modules | DONE (TASK-007) |
 | — | [`pin_sweep/`](pin_sweep/) | Dev tool: sweeps GPIOs to find unknown lamp pins | Any lamp circuit | Tool (kept for reuse) |
 
 ## How to work on a project

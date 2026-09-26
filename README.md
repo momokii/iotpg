@@ -34,6 +34,7 @@ whole environment reproduces from `scripts/setup-esp32.sh`.
 | 01 | [`firmware/blink/`](firmware/blink/) | Onboard blue LED, 5 s on/off | Done |
 | 02 | [`firmware/traffic/`](firmware/traffic/) | R/Y/G sequence, 2 s each | Done |
 | 03 | [`firmware/button_lights/`](firmware/button_lights/) | 5 animated shows, BOOT button switches | Done |
+| 04 | [`firmware/env_display/`](firmware/env_display/) | DHT11 temp/humidity on auto-discovered LCD/OLED | Done |
 | — | [`firmware/pin_sweep/`](firmware/pin_sweep/) | Dev tool: finds unknown lamp GPIOs | Tool |
 
 Only one project runs at a time — flashing replaces what's on the board:
