@@ -7,6 +7,7 @@
  * DHT22 needs DHT_TYPE_AM2301 with identical wiring.
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
@@ -14,6 +15,7 @@
 #include "dht.h"
 #include "oled.h"
 #include "rtc.h"
+#include "wifi.h"
 
 static const char *TAG = "env_display";
 
@@ -26,6 +28,9 @@ static const char *TAG = "env_display";
 
 void app_main(void)
 {
+    setenv("TZ", "WIB-7", 1);
+    tzset();
+
     gpio_reset_pin(DHT_PIN);
     gpio_set_direction(DHT_PIN, GPIO_MODE_OUTPUT_OD);
     gpio_set_pull_mode(DHT_PIN, GPIO_PULLUP_ONLY);
@@ -36,6 +41,9 @@ void app_main(void)
 
     oled_init();
     envclock_init();
+    if (wifi_sntp_sync()) {
+        envclock_note_ntp_sync();
+    }
     oled_text1206(0, 0, "DHT11 TEMP/HUM");
     oled_update();
 

@@ -1,0 +1,5 @@
+# WiFi credentials stay EMPTY here on purpose — this file is committed.
+# Put real values via `idf.py menuconfig` (Component config → WiFi station);
+# they are stored in the gitignored `sdkconfig`, never in this repo.
+CONFIG_WIFI_SSID=""
+CONFIG_WIFI_PASSWORD=""

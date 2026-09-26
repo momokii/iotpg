@@ -1,0 +1,17 @@
+menu "WiFi station (static config)"
+
+    config WIFI_SSID
+        string "WiFi SSID"
+        default ""
+        help
+            Access-point name. Empty disables WiFi (time falls back to
+            RTC/internal). Set real values via `idf.py menuconfig` — they
+            land in the gitignored sdkconfig, never in version control.
+
+    config WIFI_PASSWORD
+        string "WiFi password"
+        default ""
+        help
+            Same handling as WIFI_SSID. Never commit real credentials.
+
+endmenu

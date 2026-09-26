@@ -21,12 +21,24 @@ No network needed, but precision depends on hardware you attach:
 | Source | Precision | Needs |
 |---|---|---|
 | DS3231 RTC module (auto-detected at 0x68) | ±2 ppm ≈ seconds per year, battery keeps time across power loss | DS3231 module + coin cell; wire SDA/SCL anywhere, firmware finds it |
-| Internal clock (fallback, active now) | starts at firmware build moment, drifts minutes per day, resets on power loss | nothing |
+| NTP over Wi-Fi (active when configured) | exact, re-synced hourly | SSID/password via menuconfig (below); source tag `NTP` |
+| Internal clock (fallback) | starts at firmware build moment, drifts minutes per day, resets on power loss | nothing |
 
-Without a DS3231 the clock is a demo, not a timepiece — fine for learning,
-not for schedules. To upgrade: connect a DS3231 (VCC→3V3, GND→GND,
-SDA/SCL→any free GPIOs) and reboot; the log line changes from `internal
-time` to `DS3231 found`, no code change needed.
+Priority is DS3231 > NTP > internal. Timezone is WIB (UTC+7).
+
+## Wi-Fi config (static for now)
+
+Credentials live in Kconfig with **empty** committed defaults
+(`sdkconfig.defaults`). Set real values per machine:
+
+```bash
+idf.py -C firmware/env_display menuconfig   # Component config → WiFi station
+```
+
+They land in the gitignored `sdkconfig` — never committed, never in code.
+Empty SSID disables WiFi silently (time falls back gracefully). Changing
+networks later = edit + rebuild + reflash. Dynamic provisioning (captive
+portal, no reflash) is a planned future task, not yet implemented.
 
 ## Wiring actually found (not as labeled)
 

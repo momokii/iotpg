@@ -15,6 +15,7 @@ static const uint8_t RTC_ADDR = 0x68;
 
 static i2c_master_dev_handle_t s_dev;
 static bool s_chip = false;
+static bool s_ntp = false;
 
 static uint8_t bcd2bin(uint8_t b)
 {
@@ -165,5 +166,13 @@ bool envclock_now(struct tm *out)
 
 const char *envclock_source(void)
 {
-    return s_chip ? "RTC" : "INT";
+    if (s_chip) {
+        return "RTC";
+    }
+    return s_ntp ? "NTP" : "INT";
+}
+
+void envclock_note_ntp_sync(void)
+{
+    s_ntp = true;
 }

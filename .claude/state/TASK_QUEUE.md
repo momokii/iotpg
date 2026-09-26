@@ -12,6 +12,8 @@
 | TASK-006 | Project docs + progress log (per-project READMEs, firmware index) | Medium | DONE (4 docs written, all 3 projects rebuilt clean) | S | TASK-005 | README per project + `firmware/README.md` tracker | Every project documented and rebuildable | None |
 | TASK-007 | Env station: DHT11 + auto-discovered display | High | DONE (DHT live; 1602 @ 0x27 text confirmed on glass by user; contrast screw was the final fix) | M | TASK-005 | `firmware/env_display`: sensor + SSD1306/1602 drivers, I2C auto-discovery | Readings on USB + text on attached display(s) | None (no network/secrets; display sharing one pin with DHT is fragile — prefer one signal per pin) |
 | TASK-008 | Clock screen on BOOT toggle (DS3231/internal time) | High | DONE (BOOT toggles env/clock both ways, user confirmed on glass) | S | TASK-007 | Clock view + time sources in `firmware/env_display` | Clock shows HH:MM:SS + date + source tag | None |
+| TASK-009 | NTP time sync over static Wi-Fi (WIB timezone) | High | DONE (joined AP in ~2 s, NTP acquired; source tag `NTP`; creds in gitignored sdkconfig only) | S | TASK-008 | `firmware/env_display` WiFi station + SNTP, hourly re-sync | Monitor shows join + `NTP sync acquired`; clock screen shows NTP time | None (SSID/password never in code or git — verified by grep before commit) |
+| TASK-010 | Dynamic Wi-Fi provisioning (no reflash to change networks) | Medium | TODO | M | TASK-009 | Captive-portal or serial-console credential setup, NVS storage | Change networks without rebuild | Secrets must stay out of git; validate input at boundary |
 
 ### Template Format (use for every task added)
 

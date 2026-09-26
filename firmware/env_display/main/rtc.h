@@ -15,3 +15,4 @@
 void envclock_init(void);
 bool envclock_now(struct tm *out);
 const char *envclock_source(void);
+void envclock_note_ntp_sync(void);
