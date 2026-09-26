@@ -322,7 +322,7 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
         YY = 0;
     }
     snprintf(hm, sizeof(hm), "%02d:%02d", HH, MM);
-    snprintf(date, sizeof(date), "%02d-%02d-%02d %s", DD, MO, YY, envclock_source());
+    snprintf(date, sizeof(date), "%02d-%02d-%02d WIB %s", DD, MO, YY, envclock_source());
     if (env_ok) {
         snprintf(env, sizeof(env), "T:%.1fC H:%.0f%%", temperature, humidity);
     } else {
@@ -342,7 +342,7 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
         char line0[17], line1[17], d8[12];
         snprintf(d8, sizeof(d8), "%02d-%02d-%02d", DD, MO, YY);
         snprintf(line0, sizeof(line0), "%-16.16s", env);
-        snprintf(line1, sizeof(line1), "%.5s %.8s", hm, d8);
+        snprintf(line1, sizeof(line1), "%.5sWIB%.8s", hm, d8);
         lcd1602_clock(line0, line1);
     }
 }

@@ -16,6 +16,7 @@
 | TASK-010 | Dynamic Wi-Fi provisioning (no reflash to change networks) | Medium | TODO | M | TASK-009 | Captive-portal or serial-console credential setup, NVS storage | Change networks without rebuild | Secrets must stay out of git; validate input at boundary |
 | TASK-011 | Unified single screen (time+date+env, no toggle) | Medium | DONE (one view refreshed every second; verified on monitor + 1602 init) | S | TASK-009 | Merge env + clock views in `firmware/env_display` | All info visible at once, no button needed | None |
 | TASK-012 | Jakarta timestamp, drop seconds (HH:MM + full date) | Low | DONE (WIB already == Asia/Jakarta; verified on monitor) | S | TASK-011 | Simplify clock format in `firmware/env_display` | Time reads HH:MM, date has year on 1602 | None |
+| TASK-013 | Show timezone on screen (WIB tag) | Low | DONE (SSD1306 date line + 1602 line 1 carry WIB; verified on monitor) | S | TASK-012 | Timezone indicator in `firmware/env_display` | Screen states which zone the time is in | None |
 
 ### Template Format (use for every task added)
 

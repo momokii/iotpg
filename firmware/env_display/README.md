@@ -13,10 +13,13 @@ backpack. The firmware auto-discovers displays — see below.
 One unified screen, refreshed every second (sensor re-read every 2 s).
 Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 
-- SSD1306: big `HH:MM`, small `DD-MM-YY SRC`, small `T:25.0C H:60%`.
-- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MM DD-MM-YY` on line 1.
+- SSD1306: big `HH:MM`, small `DD-MM-YY WIB SRC`, small `T:25.0C H:60%`.
+- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MMWIBDD-MM-YY` on line 1
+  (16 columns exactly — no room for spaces around WIB).
 - SRC is `RTC` (DS3231), `NTP` (Wi-Fi sync), or `INT` (internal free-run);
-  shown in full on SSD1306 and USB log (1602 has no room for it).
+  shown in full on SSD1306 and USB log (1602 shows the WIB zone instead —
+  WIB == UTC+7 == Asia/Jakarta, no daylight saving, so the zone alone
+  disambiguates).
 
 (Humidity prints without decimals on purpose: the DHT11 only resolves
 whole percents. Temperature keeps one decimal so a future DHT22 swap
