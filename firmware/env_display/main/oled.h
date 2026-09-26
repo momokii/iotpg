@@ -19,4 +19,4 @@ void oled_text1206(uint8_t x, uint8_t page, const char *s);
 void oled_update(void);
 void oled_show_env(float temperature, float humidity);
 void oled_show_error(void);
-void oled_show_all(float temperature, float humidity, const struct tm *t, bool env_ok);
+void oled_show_all(float temperature, float humidity, const struct tm *t, bool env_ok, const char *zone);

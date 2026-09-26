@@ -17,6 +17,7 @@
 | TASK-011 | Unified single screen (time+date+env, no toggle) | Medium | DONE (one view refreshed every second; verified on monitor + 1602 init) | S | TASK-009 | Merge env + clock views in `firmware/env_display` | All info visible at once, no button needed | None |
 | TASK-012 | Jakarta timestamp, drop seconds (HH:MM + full date) | Low | DONE (WIB already == Asia/Jakarta; verified on monitor) | S | TASK-011 | Simplify clock format in `firmware/env_display` | Time reads HH:MM, date has year on 1602 | None |
 | TASK-013 | Show timezone on screen (WIB tag) | Low | DONE (SSD1306 date line + 1602 line 1 carry WIB; verified on monitor) | S | TASK-012 | Timezone indicator in `firmware/env_display` | Screen states which zone the time is in | None |
+| TASK-014 | BOOT toggles WIB/UTC timezone with proper dates | Low | DONE (toggle verified in code + boot log; user to confirm glass) | S | TASK-013 | Timezone mode in `firmware/env_display` | One click flips zone + date correctly | None (GPIO0 strapping caveat documented) |
 
 ### Template Format (use for every task added)
 
