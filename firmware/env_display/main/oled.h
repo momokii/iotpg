@@ -7,6 +7,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <time.h>
 #include "esp_err.h"
 
 #define OLED_WIDTH  128
@@ -18,3 +19,4 @@ void oled_text1206(uint8_t x, uint8_t page, const char *s);
 void oled_update(void);
 void oled_show_env(float temperature, float humidity);
 void oled_show_error(void);
+void oled_show_clock(const struct tm *t);

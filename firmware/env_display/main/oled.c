@@ -15,6 +15,7 @@
 #include "oled.h"
 #include "oled_font.h"
 #include "lcd1602.h"
+#include "rtc.h"
 
 #define OLED_SDA_PIN 22
 #define OLED_SCL_PIN 23
@@ -247,5 +248,24 @@ void oled_show_error(void)
     }
     if (s_lcd_ok) {
         lcd1602_error();
+    }
+}
+
+void oled_show_clock(const struct tm *t)
+{
+    char time[16], date[20];
+    snprintf(time, sizeof(time), "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
+    snprintf(date, sizeof(date), "%02d-%02d-%02d %s",
+             t->tm_mday, t->tm_mon + 1, (t->tm_year + 1900) % 100, envclock_source());
+    if (s_ok) {
+        oled_text1206(0, 0, "CLOCK           ");
+        oled_text1206(0, 2, "                ");
+        oled_text1206(0, 2, time);
+        oled_text1206(0, 4, "                ");
+        oled_text1206(0, 4, date);
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        lcd1602_clock(time, date);
     }
 }

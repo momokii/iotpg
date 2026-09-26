@@ -99,3 +99,11 @@ void lcd1602_error(void)
     ESP_ERROR_CHECK(goto_xy(0, 0));
     ESP_ERROR_CHECK(print("DHT ERR         "));
 }
+
+void lcd1602_clock(const char *time, const char *date)
+{
+    ESP_ERROR_CHECK(goto_xy(0, 0));
+    ESP_ERROR_CHECK(print(time));
+    ESP_ERROR_CHECK(goto_xy(0, 1));
+    ESP_ERROR_CHECK(print(date));
+}

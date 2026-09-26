@@ -8,6 +8,26 @@ backpack. The firmware auto-discovers displays — see below.
 - **Status:** sensor + 1602 LCD verified (see log below); SSD1306 path written
   but not yet seen live. Closed as TASK-007 after visual confirmation.
 
+## Screens (BOOT button toggles)
+
+- Screen 0 — env: Temp/Hum from DHT11 (default at boot).
+- Screen 1 — clock: `HH:MM:SS` + `DD-MM-YY SRC` where SRC is `RTC`
+  (DS3231 chip) or `INT` (internal free-run).
+
+## Time sources (offline precision)
+
+No network needed, but precision depends on hardware you attach:
+
+| Source | Precision | Needs |
+|---|---|---|
+| DS3231 RTC module (auto-detected at 0x68) | ±2 ppm ≈ seconds per year, battery keeps time across power loss | DS3231 module + coin cell; wire SDA/SCL anywhere, firmware finds it |
+| Internal clock (fallback, active now) | starts at firmware build moment, drifts minutes per day, resets on power loss | nothing |
+
+Without a DS3231 the clock is a demo, not a timepiece — fine for learning,
+not for schedules. To upgrade: connect a DS3231 (VCC→3V3, GND→GND,
+SDA/SCL→any free GPIOs) and reboot; the log line changes from `internal
+time` to `DS3231 found`, no code change needed.
+
 ## Wiring actually found (not as labeled)
 
 The expansion shield's labels proved untrustworthy, so the firmware probes
