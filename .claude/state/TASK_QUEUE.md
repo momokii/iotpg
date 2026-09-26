@@ -11,6 +11,7 @@
 | TASK-005 | Button-controlled light shows via onboard BOOT button | High | DONE (5 animated shows, BOOT press switches show, user confirmed working) | M | TASK-004 | `firmware/button_lights`: CHASE/TRAFFIC/BLINK/BUILD-UP/PING-PONG, random on press | Press changes show visibly; no repeat of same show | None (no network, no secrets; GPIO0 strapping caveat documented) |
 | TASK-006 | Project docs + progress log (per-project READMEs, firmware index) | Medium | DONE (4 docs written, all 3 projects rebuilt clean) | S | TASK-005 | README per project + `firmware/README.md` tracker | Every project documented and rebuildable | None |
 | TASK-007 | Env station: DHT11 + auto-discovered display | High | DONE (DHT live; 1602 @ 0x27 text confirmed on glass by user; contrast screw was the final fix) | M | TASK-005 | `firmware/env_display`: sensor + SSD1306/1602 drivers, I2C auto-discovery | Readings on USB + text on attached display(s) | None (no network/secrets; display sharing one pin with DHT is fragile — prefer one signal per pin) |
+| TASK-008 | Clock screen on BOOT toggle (DS3231/internal time) | High | DONE (BOOT toggles env/clock both ways, user confirmed on glass) | S | TASK-007 | Clock view + time sources in `firmware/env_display` | Clock shows HH:MM:SS + date + source tag | None |
 
 ### Template Format (use for every task added)
 
