@@ -21,6 +21,13 @@ One unified screen, refreshed every second (sensor re-read every 2 s):
 whole percents. Temperature keeps one decimal so a future DHT22 swap
 shows tenths with no format change.)
 
+## Text sizes (SSD1306 only — 1602 cells are fixed hardware)
+
+- Big clock line: vendored 12x6 font (`oled_font.*`, Apache-2.0).
+- Date/env lines: compact hand-built 5x7 subset (`main/font57.h`, digits +
+  the letters/punctuation these screens print) — 21 chars/line, leaving
+  the bottom half of the 128x64 glass free for future rows.
+
 ## Time sources (offline precision)
 
 No network needed, but precision depends on hardware you attach:
