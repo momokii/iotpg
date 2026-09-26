@@ -6,6 +6,7 @@
 #include "driver/i2c_master.h"
 
 void lcd1602_init(i2c_master_bus_handle_t bus, uint8_t addr);
+bool lcd1602_ok(void);
 void lcd1602_show(float temperature, float humidity);
 void lcd1602_error(void);
 void lcd1602_clock(const char *time, const char *date);

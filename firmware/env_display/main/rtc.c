@@ -9,13 +9,10 @@
 #include "esp_log.h"
 #include "rtc.h"
 
-static const char *TAG = "rtc";
-static const int CAND_PINS[] = { 4, 5, 12, 13, 14, 21, 22, 23 };
-static const uint8_t RTC_ADDR = 0x68;
-
 static i2c_master_dev_handle_t s_dev;
 static bool s_chip = false;
 static bool s_ntp = false;
+static const char *TAG = "rtc";
 
 static uint8_t bcd2bin(uint8_t b)
 {
@@ -102,52 +99,32 @@ static void chip_write_build(void)
 
 void envclock_init(void)
 {
-    size_t npins = sizeof(CAND_PINS) / sizeof(CAND_PINS[0]);
-    for (size_t i = 0; i < npins && !s_chip; i++) {
-        for (size_t j = 0; j < npins && !s_chip; j++) {
-            if (i == j) {
-                continue;
-            }
-            i2c_master_bus_config_t bus_cfg = {
-                .i2c_port = I2C_NUM_0,
-                .sda_io_num = CAND_PINS[i],
-                .scl_io_num = CAND_PINS[j],
-                .clk_source = I2C_CLK_SRC_DEFAULT,
-                .glitch_ignore_cnt = 7,
-                .flags.enable_internal_pullup = true,
-            };
-            i2c_master_bus_handle_t bus = NULL;
-            if (i2c_new_master_bus(&bus_cfg, &bus) != ESP_OK) {
-                continue;
-            }
-            if (i2c_master_probe(bus, RTC_ADDR, 20) != ESP_OK) {
-                i2c_del_master_bus(bus);
-                continue;
-            }
-            i2c_device_config_t dev_cfg = {
-                .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-                .device_address = RTC_ADDR,
-                .scl_speed_hz = 100000,
-            };
-            if (i2c_master_bus_add_device(bus, &dev_cfg, &s_dev) != ESP_OK) {
-                i2c_del_master_bus(bus);
-                continue;
-            }
-            ESP_LOGI(TAG, "DS3231 found at 0x68 on SDA=%d SCL=%d",
-                     CAND_PINS[i], CAND_PINS[j]);
-            s_chip = true;
-        }
-    }
-    if (!s_chip) {
-        ESP_LOGI(TAG, "no DS3231 on any probed pair — internal time (drifts, resets on power loss)");
-    }
+    /* No hardware of our own: the display layer (oled.c) scans the bus
+     * pairs once and hands us a bus via envclock_attach() when it finds
+     * a DS3231. Until then (or forever, without the chip) time runs on
+     * the internal clock seeded below. */
     seed_from_build();
-    if (s_chip) {
-        struct tm t = { 0 };
+}
+
+void envclock_attach(i2c_master_bus_handle_t bus)
+{
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = 0x68,
+        .scl_speed_hz = 100000,
+    };
+    if (i2c_master_bus_add_device(bus, &dev_cfg, &s_dev) != ESP_OK) {
+        return;
+    }
+    struct tm t = { 0 };
+    if (!chip_read(&t)) {
+        chip_write_build();
         if (!chip_read(&t)) {
-            chip_write_build();
+            return;
         }
     }
+    s_chip = true;
+    ESP_LOGI(TAG, "DS3231 active");
 }
 
 bool envclock_now(struct tm *out)

@@ -14,6 +14,7 @@
 #include "esp_log.h"
 #include "oled.h"
 #include "oled_font.h"
+#include "font57.h"
 #include "lcd1602.h"
 #include "rtc.h"
 
@@ -24,6 +25,7 @@
 static const int CAND_PINS[] = { 4, 5, 12, 13, 14, 21, 22, 23 };
 static const uint8_t SSD_ADDRS[] = { 0x3C, 0x3D };
 static const uint8_t LCD_ADDRS[] = { 0x27, 0x3F };
+static const uint8_t RTC_ADDR = 0x68;
 
 static const char *TAG = "oled";
 static i2c_master_dev_handle_t s_dev;
@@ -31,16 +33,20 @@ static bool s_ok = false;
 static bool s_lcd_ok = false;
 static uint8_t s_fb[8][128];
 
-/* Probe one SDA/SCL pair for any known display address; returns it or 0. */
+/* Probe one SDA/SCL pair for any known display address; returns it or 0.
+ * Each candidate address is probed twice — a single ACK on a shared or
+ * flaky bus is not trusted. */
 static uint8_t probe_pair(i2c_master_bus_handle_t bus)
 {
     for (size_t k = 0; k < sizeof(SSD_ADDRS); k++) {
-        if (i2c_master_probe(bus, SSD_ADDRS[k], 20) == ESP_OK) {
+        if (i2c_master_probe(bus, SSD_ADDRS[k], 20) == ESP_OK &&
+            i2c_master_probe(bus, SSD_ADDRS[k], 20) == ESP_OK) {
             return SSD_ADDRS[k];
         }
     }
     for (size_t k = 0; k < sizeof(LCD_ADDRS); k++) {
-        if (i2c_master_probe(bus, LCD_ADDRS[k], 20) == ESP_OK) {
+        if (i2c_master_probe(bus, LCD_ADDRS[k], 20) == ESP_OK &&
+            i2c_master_probe(bus, LCD_ADDRS[k], 20) == ESP_OK) {
             return LCD_ADDRS[k];
         }
     }
@@ -133,17 +139,19 @@ static void init_lcd1602(int sda, int scl, uint8_t addr)
         return;
     }
     lcd1602_init(bus, addr);
-    s_lcd_ok = true;
+    s_lcd_ok = lcd1602_ok();
 }
 
 void oled_init(void)
 {
     int ssd_sda = -1, ssd_scl = -1, lcd_sda = -1, lcd_scl = -1;
+    int rtc_sda = -1, rtc_scl = -1;
     uint8_t ssd_addr = 0, lcd_addr = 0;
+    bool rtc_found = false;
 
     size_t npins = sizeof(CAND_PINS) / sizeof(CAND_PINS[0]);
-    for (size_t i = 0; i < npins && (ssd_addr == 0 || lcd_addr == 0); i++) {
-        for (size_t j = 0; j < npins && (ssd_addr == 0 || lcd_addr == 0); j++) {
+    for (size_t i = 0; i < npins && (ssd_addr == 0 || lcd_addr == 0 || !rtc_found); i++) {
+        for (size_t j = 0; j < npins && (ssd_addr == 0 || lcd_addr == 0 || !rtc_found); j++) {
             if (i == j) {
                 continue;
             }
@@ -170,6 +178,13 @@ void oled_init(void)
                     lcd_scl = CAND_PINS[j];
                 }
             }
+            if (!rtc_found && i2c_master_probe(bus, RTC_ADDR, 20) == ESP_OK &&
+                i2c_master_probe(bus, RTC_ADDR, 20) == ESP_OK) {
+                ESP_LOGI(TAG, "DS3231 ACK at 0x68 on SDA=%d SCL=%d", CAND_PINS[i], CAND_PINS[j]);
+                rtc_found = true;
+                rtc_sda = CAND_PINS[i];
+                rtc_scl = CAND_PINS[j];
+            }
             i2c_del_master_bus(bus);
         }
     }
@@ -179,6 +194,14 @@ void oled_init(void)
     }
     if (lcd_addr != 0) {
         init_lcd1602(lcd_sda, lcd_scl, lcd_addr);
+    }
+    if (rtc_found) {
+        i2c_master_bus_handle_t bus = open_bus(rtc_sda, rtc_scl);
+        if (bus != NULL) {
+            envclock_attach(bus);
+        }
+    } else {
+        ESP_LOGI(TAG, "no DS3231 on any probed pair — internal time (drifts, resets on power loss)");
     }
     if (ssd_addr == 0 && lcd_addr == 0) {
         ESP_LOGW(TAG, "No display found on any probed SDA/SCL pair — sensor still logs to USB");
@@ -214,12 +237,39 @@ void oled_update(void)
     }
     uint8_t chunk[1 + 128];
     chunk[0] = 0x40;
-    for (uint8_t page = 0; page < 8; page++) {
-        ESP_ERROR_CHECK(write_cmd(0xB0 | page));
-        ESP_ERROR_CHECK(write_cmd(0x00));
-        ESP_ERROR_CHECK(write_cmd(0x10));
+    for (uint8_t page = 0; page < 8 && s_ok; page++) {
         memcpy(&chunk[1], s_fb[page], 128);
-        ESP_ERROR_CHECK(i2c_master_transmit(s_dev, chunk, sizeof(chunk), -1));
+        if (write_cmd(0xB0 | page) != ESP_OK || write_cmd(0x00) != ESP_OK ||
+            write_cmd(0x10) != ESP_OK ||
+            i2c_master_transmit(s_dev, chunk, sizeof(chunk), -1) != ESP_OK) {
+            s_ok = false;
+            ESP_LOGW(TAG, "OLED write failed mid-frame — OLED disabled");
+            return;
+        }
+    }
+}
+
+/* Small text: 5x7 glyphs at 6 px pitch, one page per row. Unknown glyphs
+ * render as blank so a missing table entry degrades visibly, not weirdly. */
+static void oled_text57(uint8_t x, uint8_t page, const char *s)
+{
+    if (!s_ok || page > 7) {
+        return;
+    }
+    for (; *s && x + 5 < OLED_WIDTH; s++, x += 6) {
+        const uint8_t *g = NULL;
+        for (size_t i = 0; i < FONT57_COUNT; i++) {
+            if (FONT57[i].ch == *s) {
+                g = FONT57[i].cols;
+                break;
+            }
+        }
+        if (g == NULL) {
+            memset(&s_fb[page][x], 0, 5);
+        } else {
+            memcpy(&s_fb[page][x], g, 5);
+        }
+        s_fb[page][x + 5] = 0;
     }
 }
 
@@ -265,10 +315,11 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
     if (s_ok) {
         oled_text1206(0, 0, "                ");
         oled_text1206(0, 0, time);
-        oled_text1206(0, 2, "                ");
-        oled_text1206(0, 2, date);
-        oled_text1206(0, 4, "                ");
-        oled_text1206(0, 4, env);
+        oled_text57(0, 2, date);
+        oled_text57(0, 3, env);
+        for (uint8_t p = 4; p < 8; p++) {
+            memset(&s_fb[p][0], 0, 128);
+        }
         oled_update();
     }
     if (s_lcd_ok) {

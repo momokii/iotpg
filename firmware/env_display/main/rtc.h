@@ -11,8 +11,10 @@
 
 #include <stdbool.h>
 #include <time.h>
+#include "driver/i2c_master.h"
 
 void envclock_init(void);
+void envclock_attach(i2c_master_bus_handle_t bus);
 bool envclock_now(struct tm *out);
 const char *envclock_source(void);
 void envclock_note_ntp_sync(void);

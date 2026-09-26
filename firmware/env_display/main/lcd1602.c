@@ -3,6 +3,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -15,6 +16,7 @@
 
 static const char *TAG = "lcd1602";
 static i2c_master_dev_handle_t s_dev;
+static bool s_ok = false;
 
 static esp_err_t write_nibble(uint8_t nib, bool rs)
 {
@@ -67,48 +69,81 @@ void lcd1602_init(i2c_master_bus_handle_t bus, uint8_t addr)
         .device_address = addr,
         .scl_speed_hz = 100000,
     };
-    ESP_ERROR_CHECK(i2c_master_bus_add_device(bus, &dev_cfg, &s_dev));
+    if (i2c_master_bus_add_device(bus, &dev_cfg, &s_dev) != ESP_OK) {
+        return;
+    }
     vTaskDelay(pdMS_TO_TICKS(50));
-    ESP_ERROR_CHECK(write_nibble(0x03, false));
+    if (write_nibble(0x03, false) != ESP_OK) {
+        return;
+    }
     vTaskDelay(pdMS_TO_TICKS(5));
-    ESP_ERROR_CHECK(write_nibble(0x03, false));
+    if (write_nibble(0x03, false) != ESP_OK) {
+        return;
+    }
     esp_rom_delay_us(150);
-    ESP_ERROR_CHECK(write_nibble(0x03, false));
-    ESP_ERROR_CHECK(write_nibble(0x02, false));
-    ESP_ERROR_CHECK(cmd(0x28));
-    ESP_ERROR_CHECK(cmd(0x0C));
-    ESP_ERROR_CHECK(cmd(0x06));
-    ESP_ERROR_CHECK(cmd(0x01));
+    if (write_nibble(0x03, false) != ESP_OK) {
+        return;
+    }
+    if (write_nibble(0x02, false) != ESP_OK) {
+        return;
+    }
+    if (cmd(0x28) != ESP_OK || cmd(0x0C) != ESP_OK) {
+        return;
+    }
+    if (cmd(0x06) != ESP_OK || cmd(0x01) != ESP_OK) {
+        return;
+    }
     vTaskDelay(pdMS_TO_TICKS(2));
+    s_ok = true;
     ESP_LOGI(TAG, "1602 ready at 0x%02X", addr);
+}
+
+bool lcd1602_ok(void)
+{
+    return s_ok;
 }
 
 void lcd1602_show(float temperature, float humidity)
 {
+    if (!s_ok) {
+        return;
+    }
     char content[17], line[17];
     snprintf(content, sizeof(content), "Temp: %.1fC", temperature);
     snprintf(line, sizeof(line), "%-16.16s", content);
-    ESP_ERROR_CHECK(goto_xy(0, 0));
-    ESP_ERROR_CHECK(print(line));
+    if (goto_xy(0, 0) != ESP_OK || print(line) != ESP_OK) {
+        return;
+    }
     snprintf(content, sizeof(content), "Hum: %.1f%%", humidity);
     snprintf(line, sizeof(line), "%-16.16s", content);
-    ESP_ERROR_CHECK(goto_xy(0, 1));
-    ESP_ERROR_CHECK(print(line));
+    if (goto_xy(0, 1) != ESP_OK || print(line) != ESP_OK) {
+        return;
+    }
 }
 
 void lcd1602_error(void)
 {
-    ESP_ERROR_CHECK(goto_xy(0, 0));
-    ESP_ERROR_CHECK(print("DHT ERR         "));
+    if (!s_ok) {
+        return;
+    }
+    if (goto_xy(0, 0) != ESP_OK) {
+        return;
+    }
+    print("DHT ERR         ");
 }
 
 void lcd1602_clock(const char *time, const char *date)
 {
+    if (!s_ok) {
+        return;
+    }
     char line[17];
     snprintf(line, sizeof(line), "%-16.16s", time);
-    ESP_ERROR_CHECK(goto_xy(0, 0));
-    ESP_ERROR_CHECK(print(line));
+    if (goto_xy(0, 0) != ESP_OK || print(line) != ESP_OK) {
+        return;
+    }
     snprintf(line, sizeof(line), "%-16.16s", date);
-    ESP_ERROR_CHECK(goto_xy(0, 1));
-    ESP_ERROR_CHECK(print(line));
+    if (goto_xy(0, 1) != ESP_OK || print(line) != ESP_OK) {
+        return;
+    }
 }
