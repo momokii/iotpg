@@ -10,10 +10,11 @@ backpack. The firmware auto-discovers displays — see below.
 
 ## Screens
 
-One unified screen, refreshed every second (sensor re-read every 2 s):
+One unified screen, refreshed every second (sensor re-read every 2 s).
+Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 
-- SSD1306: `HH:MM:SS`, `DD-MM-YY SRC`, `T:25.0C H:60%` on separate rows.
-- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MM:SS DD-MM` on line 1.
+- SSD1306: big `HH:MM`, small `DD-MM-YY SRC`, small `T:25.0C H:60%`.
+- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MM DD-MM-YY` on line 1.
 - SRC is `RTC` (DS3231), `NTP` (Wi-Fi sync), or `INT` (internal free-run);
   shown in full on SSD1306 and USB log (1602 has no room for it).
 

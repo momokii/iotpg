@@ -303,10 +303,26 @@ void oled_show_error(void)
 
 void oled_show_all(float temperature, float humidity, const struct tm *t, bool env_ok)
 {
-    char time[16], date[20], env[20];
-    snprintf(time, sizeof(time), "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
-    snprintf(date, sizeof(date), "%02d-%02d-%02d %s",
-             t->tm_mday, t->tm_mon + 1, (t->tm_year + 1900) % 100, envclock_source());
+    char hm[8], date[20], env[20];
+    int HH = t->tm_hour, MM = t->tm_min;
+    int DD = t->tm_mday, MO = t->tm_mon + 1, YY = (t->tm_year + 1900) % 100;
+    if (HH < 0 || HH > 23) {
+        HH = 0;
+    }
+    if (MM < 0 || MM > 59) {
+        MM = 0;
+    }
+    if (DD < 1 || DD > 31) {
+        DD = 1;
+    }
+    if (MO < 1 || MO > 12) {
+        MO = 1;
+    }
+    if (YY < 0 || YY > 99) {
+        YY = 0;
+    }
+    snprintf(hm, sizeof(hm), "%02d:%02d", HH, MM);
+    snprintf(date, sizeof(date), "%02d-%02d-%02d %s", DD, MO, YY, envclock_source());
     if (env_ok) {
         snprintf(env, sizeof(env), "T:%.1fC H:%.0f%%", temperature, humidity);
     } else {
@@ -314,7 +330,7 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
     }
     if (s_ok) {
         oled_text1206(0, 0, "                ");
-        oled_text1206(0, 0, time);
+        oled_text1206(0, 0, hm);
         oled_text57(0, 2, date);
         oled_text57(0, 3, env);
         for (uint8_t p = 4; p < 8; p++) {
@@ -323,9 +339,10 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
         oled_update();
     }
     if (s_lcd_ok) {
-        char line0[17], line1[17];
+        char line0[17], line1[17], d8[12];
+        snprintf(d8, sizeof(d8), "%02d-%02d-%02d", DD, MO, YY);
         snprintf(line0, sizeof(line0), "%-16.16s", env);
-        snprintf(line1, sizeof(line1), "%.8s %.5s", time, date);
+        snprintf(line1, sizeof(line1), "%.5s %.8s", hm, d8);
         lcd1602_clock(line0, line1);
     }
 }
