@@ -85,11 +85,13 @@ void lcd1602_init(i2c_master_bus_handle_t bus, uint8_t addr)
 
 void lcd1602_show(float temperature, float humidity)
 {
-    char line[17];
-    snprintf(line, sizeof(line), "Temp: %.1fC", temperature);
+    char content[17], line[17];
+    snprintf(content, sizeof(content), "Temp: %.1fC", temperature);
+    snprintf(line, sizeof(line), "%-16.16s", content);
     ESP_ERROR_CHECK(goto_xy(0, 0));
     ESP_ERROR_CHECK(print(line));
-    snprintf(line, sizeof(line), "Hum: %.1f%%", humidity);
+    snprintf(content, sizeof(content), "Hum: %.1f%%", humidity);
+    snprintf(line, sizeof(line), "%-16.16s", content);
     ESP_ERROR_CHECK(goto_xy(0, 1));
     ESP_ERROR_CHECK(print(line));
 }
@@ -102,8 +104,11 @@ void lcd1602_error(void)
 
 void lcd1602_clock(const char *time, const char *date)
 {
+    char line[17];
+    snprintf(line, sizeof(line), "%-16.16s", time);
     ESP_ERROR_CHECK(goto_xy(0, 0));
-    ESP_ERROR_CHECK(print(time));
+    ESP_ERROR_CHECK(print(line));
+    snprintf(line, sizeof(line), "%-16.16s", date);
     ESP_ERROR_CHECK(goto_xy(0, 1));
-    ESP_ERROR_CHECK(print(date));
+    ESP_ERROR_CHECK(print(line));
 }
