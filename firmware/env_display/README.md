@@ -8,11 +8,18 @@ backpack. The firmware auto-discovers displays — see below.
 - **Status:** sensor + 1602 LCD verified (see log below); SSD1306 path written
   but not yet seen live. Closed as TASK-007 after visual confirmation.
 
-## Screens (BOOT button toggles)
+## Screens
 
-- Screen 0 — env: Temp/Hum from DHT11 (default at boot).
-- Screen 1 — clock: `HH:MM:SS` + `DD-MM-YY SRC` where SRC is `RTC`
-  (DS3231 chip) or `INT` (internal free-run).
+One unified screen, refreshed every second (sensor re-read every 2 s):
+
+- SSD1306: `HH:MM:SS`, `DD-MM-YY SRC`, `T:25.0C H:60%` on separate rows.
+- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MM:SS DD-MM` on line 1.
+- SRC is `RTC` (DS3231), `NTP` (Wi-Fi sync), or `INT` (internal free-run);
+  shown in full on SSD1306 and USB log (1602 has no room for it).
+
+(Humidity prints without decimals on purpose: the DHT11 only resolves
+whole percents. Temperature keeps one decimal so a future DHT22 swap
+shows tenths with no format change.)
 
 ## Time sources (offline precision)
 

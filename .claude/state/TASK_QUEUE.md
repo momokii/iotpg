@@ -14,6 +14,7 @@
 | TASK-008 | Clock screen on BOOT toggle (DS3231/internal time) | High | DONE (BOOT toggles env/clock both ways, user confirmed on glass) | S | TASK-007 | Clock view + time sources in `firmware/env_display` | Clock shows HH:MM:SS + date + source tag | None |
 | TASK-009 | NTP time sync over static Wi-Fi (WIB timezone) | High | DONE (joined AP in ~2 s, NTP acquired; source tag `NTP`; creds in gitignored sdkconfig only) | S | TASK-008 | `firmware/env_display` WiFi station + SNTP, hourly re-sync | Monitor shows join + `NTP sync acquired`; clock screen shows NTP time | None (SSID/password never in code or git — verified by grep before commit) |
 | TASK-010 | Dynamic Wi-Fi provisioning (no reflash to change networks) | Medium | TODO | M | TASK-009 | Captive-portal or serial-console credential setup, NVS storage | Change networks without rebuild | Secrets must stay out of git; validate input at boundary |
+| TASK-011 | Unified single screen (time+date+env, no toggle) | Medium | DONE (one view refreshed every second; verified on monitor + 1602 init) | S | TASK-009 | Merge env + clock views in `firmware/env_display` | All info visible at once, no button needed | None |
 
 ### Template Format (use for every task added)
 

@@ -1,10 +1,12 @@
-/* Temp/humidity + clock station: DHT11 on GPIO21, auto-discovered display.
+/* Temp/humidity + clock station on one screen: DHT11 on GPIO21,
+ * auto-discovered display (SSD1306 and/or 1602 LCD).
  *
- * BOOT button toggles two screens: env (Temp/Hum) and clock (HH:MM:SS +
- * date). Time comes from a DS3231 RTC if one answers on the bus, else the
- * internal clock seeded from the firmware build stamp (drifts, resets on
- * power loss — see rtc.h). DHT11 note: DHT_TYPE_DHT11 reads integer units;
- * DHT22 needs DHT_TYPE_AM2301 with identical wiring.
+ * Single unified view — time, date, source, temperature, humidity together,
+ * refreshed every second (sensor re-read every 2 s, its hardware limit).
+ * Time: DS3231 RTC if present, else NTP over Wi-Fi, else internal clock
+ * from the build stamp (see rtc.h). DHT11 note: DHT_TYPE_DHT11 reads
+ * integer units, hence humidity shown without decimals; DHT22 needs
+ * DHT_TYPE_AM2301 with identical wiring.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,9 +23,7 @@ static const char *TAG = "env_display";
 
 #define DHT_PIN   GPIO_NUM_21
 #define DHT_TYPE  DHT_TYPE_DHT11
-#define BTN_GPIO  GPIO_NUM_0
 
-#define DEBOUNCE_MS 50
 #define TICK_MS     100
 
 void app_main(void)
@@ -35,10 +35,6 @@ void app_main(void)
     gpio_set_direction(DHT_PIN, GPIO_MODE_OUTPUT_OD);
     gpio_set_pull_mode(DHT_PIN, GPIO_PULLUP_ONLY);
 
-    gpio_reset_pin(BTN_GPIO);
-    gpio_set_direction(BTN_GPIO, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(BTN_GPIO, GPIO_PULLUP_ONLY);
-
     oled_init();
     envclock_init();
     if (wifi_sntp_sync()) {
@@ -47,44 +43,26 @@ void app_main(void)
     oled_text1206(0, 0, "DHT11 TEMP/HUM");
     oled_update();
 
-    int screen = 0; /* 0 = env, 1 = clock — BOOT toggles */
-    int low_streak = 0, tick = 0;
-    ESP_LOGI(TAG, "BOOT toggles env/clock screens");
+    float temperature = 0, humidity = 0;
+    bool env_ok = false;
+    int tick = 0;
+    ESP_LOGI(TAG, "unified screen: time + env, refreshed every second");
 
     while (1) {
-        if (gpio_get_level(BTN_GPIO) == 0) {
-            if (++low_streak >= DEBOUNCE_MS / TICK_MS) {
-                screen ^= 1;
-                ESP_LOGI(TAG, "screen %d (%s)", screen, screen ? "clock" : "env");
-                while (gpio_get_level(BTN_GPIO) == 0) {
-                    vTaskDelay(pdMS_TO_TICKS(TICK_MS));
-                }
-                low_streak = 0;
-            }
-        } else {
-            low_streak = 0;
-        }
         tick++;
         if (tick % 20 == 0) {
-            float humidity = 0, temperature = 0;
             if (dht_read_float_data(DHT_TYPE, DHT_PIN, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temp: %.1f C  Hum: %.1f %%", temperature, humidity);
-                if (screen == 0) {
-                    oled_show_env(temperature, humidity);
-                }
+                env_ok = true;
             } else {
                 ESP_LOGW(TAG, "DHT read failed — check wiring (DATA->21, VCC->3V3, GND->GND)");
-                if (screen == 0) {
-                    oled_show_error();
-                }
+                env_ok = false;
             }
         }
-        if (screen == 1 && tick % 10 == 0) {
+        if (tick % 10 == 0) {
             struct tm now = { 0 };
             if (envclock_now(&now)) {
-                ESP_LOGI(TAG, "Clock: %02d:%02d:%02d (%s)",
-                         now.tm_hour, now.tm_min, now.tm_sec, envclock_source());
-                oled_show_clock(&now);
+                oled_show_all(temperature, humidity, &now, env_ok);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

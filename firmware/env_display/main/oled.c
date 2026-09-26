@@ -251,21 +251,30 @@ void oled_show_error(void)
     }
 }
 
-void oled_show_clock(const struct tm *t)
+void oled_show_all(float temperature, float humidity, const struct tm *t, bool env_ok)
 {
-    char time[16], date[20];
+    char time[16], date[20], env[20];
     snprintf(time, sizeof(time), "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     snprintf(date, sizeof(date), "%02d-%02d-%02d %s",
              t->tm_mday, t->tm_mon + 1, (t->tm_year + 1900) % 100, envclock_source());
+    if (env_ok) {
+        snprintf(env, sizeof(env), "T:%.1fC H:%.0f%%", temperature, humidity);
+    } else {
+        snprintf(env, sizeof(env), "DHT ERR");
+    }
     if (s_ok) {
-        oled_text1206(0, 0, "CLOCK           ");
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, time);
         oled_text1206(0, 2, "                ");
-        oled_text1206(0, 2, time);
+        oled_text1206(0, 2, date);
         oled_text1206(0, 4, "                ");
-        oled_text1206(0, 4, date);
+        oled_text1206(0, 4, env);
         oled_update();
     }
     if (s_lcd_ok) {
-        lcd1602_clock(time, date);
+        char line0[17], line1[17];
+        snprintf(line0, sizeof(line0), "%-16.16s", env);
+        snprintf(line1, sizeof(line1), "%.8s %.5s", time, date);
+        lcd1602_clock(line0, line1);
     }
 }
