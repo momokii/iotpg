@@ -119,13 +119,13 @@ bool wifi_sntp_sync(void)
 static const char *rssi_quality(int dbm)
 {
     if (dbm >= -50) {
-        return "Excel";
+        return "Strong";
     }
     if (dbm >= -60) {
         return "Good";
     }
     if (dbm >= -70) {
-        return "Fair";
+        return "OK";
     }
     return "Weak";
 }

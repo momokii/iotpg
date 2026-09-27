@@ -24,8 +24,9 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 ## Pages and button UX (BOOT, GPIO0)
 
 - Page 0 — main: time/date/env as above.
-- Page 1 — wifi: SSID, link status, live RSSI in dBm + quality word
-  (`Excel ≥−50, Good ≥−60, Fair ≥−70, Weak below`).
+- Page 1 — wifi, in plain words: network name, then `Signal: Strong /
+  Good / OK / Weak`, or `Not connected`. No decibels on glass (dBm stays
+  in the USB log for diagnostics).
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.

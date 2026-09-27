@@ -347,12 +347,13 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
 void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *quality)
 {
     char l0[24], l1[32];
+    (void)rssi_dbm;
     if (connected) {
         snprintf(l0, sizeof(l0), "%.16s", ssid);
-        snprintf(l1, sizeof(l1), "CONN %d %s", rssi_dbm, quality);
+        snprintf(l1, sizeof(l1), "Signal: %s", quality);
     } else {
-        snprintf(l0, sizeof(l0), "%.16s", ssid[0] ? ssid : "(no SSID)");
-        snprintf(l1, sizeof(l1), "DISC no link");
+        snprintf(l0, sizeof(l0), "%.16s", ssid[0] ? ssid : "(no wifi set)");
+        snprintf(l1, sizeof(l1), "Not connected");
     }
     if (s_ok) {
         oled_text1206(0, 0, "                ");
