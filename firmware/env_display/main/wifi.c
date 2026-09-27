@@ -27,6 +27,8 @@ static const char *TAG = "wifi";
 
 static EventGroupHandle_t s_events;
 static bool s_ntp = false;
+static bool s_connected = false;
+static char s_ssid[sizeof(((wifi_config_t *)0)->sta.ssid)] = { 0 };
 
 static void on_sntp(struct timeval *tv)
 {
@@ -42,9 +44,11 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
     if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+        s_connected = false;
         ESP_LOGI(TAG, "disconnected, retrying...");
         esp_wifi_connect();
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
+        s_connected = true;
         xEventGroupSetBits(s_events, GOT_IP_BIT);
     }
 }
@@ -81,6 +85,7 @@ bool wifi_sntp_sync(void)
     wifi_config_t wc = { 0 };
     strncpy((char *)wc.sta.ssid, CONFIG_WIFI_SSID, sizeof(wc.sta.ssid) - 1);
     strncpy((char *)wc.sta.password, CONFIG_WIFI_PASSWORD, sizeof(wc.sta.password) - 1);
+    strncpy(s_ssid, CONFIG_WIFI_SSID, sizeof(s_ssid) - 1);
     wc.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
     ESP_LOGI(TAG, "joining '%s'...", CONFIG_WIFI_SSID);
@@ -109,4 +114,38 @@ bool wifi_sntp_sync(void)
         return false;
     }
     return true;
+}
+
+static const char *rssi_quality(int dbm)
+{
+    if (dbm >= -50) {
+        return "Excel";
+    }
+    if (dbm >= -60) {
+        return "Good";
+    }
+    if (dbm >= -70) {
+        return "Fair";
+    }
+    return "Weak";
+}
+
+void wifi_get_status(wifi_status_t *out)
+{
+    memset(out, 0, sizeof(*out));
+    strncpy(out->ssid, s_ssid, sizeof(out->ssid) - 1);
+    out->connected = s_connected;
+    if (!s_connected) {
+        out->rssi_dbm = 0;
+        out->quality = "--";
+        return;
+    }
+    int rssi = 0;
+    if (esp_wifi_sta_get_rssi(&rssi) != ESP_OK) {
+        out->connected = false;
+        out->quality = "--";
+        return;
+    }
+    out->rssi_dbm = rssi;
+    out->quality = rssi_quality(rssi);
 }

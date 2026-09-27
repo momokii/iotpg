@@ -1,9 +1,11 @@
 /* Temp/humidity + clock station on one screen: DHT11 on GPIO21,
  * auto-discovered display (SSD1306 and/or 1602 LCD).
  *
- * Single unified view — time, date, zone, temperature, humidity together,
- * refreshed every second (sensor re-read every 2 s, its hardware limit).
- * BOOT toggles the timezone: WIB (Asia/Jakarta, default) vs UTC.
+ * Page 0 (main): time, date, zone, temperature, humidity together.
+ * Page 1 (wifi): SSID, link status, RSSI + quality word.
+ * Single-button UX (BOOT, GPIO0): short press toggles WIB/UTC, holding
+ * ~1.5 s flips pages. Fire-on-threshold for long, fire-on-release for
+ * short — the standard single-button pattern.
  * Time: DS3231 RTC if present, else NTP over Wi-Fi, else internal clock
  * from the build stamp (see rtc.h). DHT11 note: DHT_TYPE_DHT11 reads
  * integer units, hence humidity shown without decimals; DHT22 needs
@@ -26,8 +28,8 @@ static const char *TAG = "env_display";
 #define DHT_TYPE  DHT_TYPE_DHT11
 #define BTN_GPIO  GPIO_NUM_0
 
-#define DEBOUNCE_MS 50
-#define TICK_MS     100
+#define LONG_TICKS    15
+#define TICK_MS       100
 
 void app_main(void)
 {
@@ -52,21 +54,25 @@ void app_main(void)
 
     float temperature = 0, humidity = 0;
     bool env_ok = false;
-    int tick = 0, low_streak = 0, tz_utc = 0;
-    ESP_LOGI(TAG, "unified screen: time + env, refreshed every second; BOOT toggles WIB/UTC");
+    int tick = 0, held = 0, tz_utc = 0, page = 0;
+    bool long_fired = false;
+    ESP_LOGI(TAG, "pages: 0 main, 1 wifi — short press toggles WIB/UTC, hold flips page");
 
     while (1) {
         if (gpio_get_level(BTN_GPIO) == 0) {
-            if (++low_streak >= DEBOUNCE_MS / TICK_MS) {
-                tz_utc ^= 1;
-                ESP_LOGI(TAG, "timezone %s", tz_utc ? "UTC" : "WIB");
-                while (gpio_get_level(BTN_GPIO) == 0) {
-                    vTaskDelay(pdMS_TO_TICKS(TICK_MS));
-                }
-                low_streak = 0;
+            held++;
+            if (held >= LONG_TICKS && !long_fired) {
+                long_fired = true;
+                page ^= 1;
+                ESP_LOGI(TAG, "page %d (%s)", page, page ? "wifi" : "main");
             }
         } else {
-            low_streak = 0;
+            if (held > 0 && held < LONG_TICKS && !long_fired) {
+                tz_utc ^= 1;
+                ESP_LOGI(TAG, "timezone %s", tz_utc ? "UTC" : "WIB");
+            }
+            held = 0;
+            long_fired = false;
         }
         tick++;
         if (tick % 20 == 0) {
@@ -79,18 +85,26 @@ void app_main(void)
             }
         }
         if (tick % 10 == 0) {
-            struct tm wib = { 0 };
-            struct tm show = { 0 };
-            const char *zone = "WIB";
-            if (envclock_now(&wib)) {
-                if (tz_utc) {
-                    time_t ep = mktime(&wib);
-                    gmtime_r(&ep, &show);
-                    zone = "UTC";
-                } else {
-                    show = wib;
+            if (page == 0) {
+                struct tm wib = { 0 };
+                struct tm show = { 0 };
+                const char *zone = "WIB";
+                if (envclock_now(&wib)) {
+                    if (tz_utc) {
+                        time_t ep = mktime(&wib);
+                        gmtime_r(&ep, &show);
+                        zone = "UTC";
+                    } else {
+                        show = wib;
+                    }
+                    oled_show_all(temperature, humidity, &show, env_ok, zone);
                 }
-                oled_show_all(temperature, humidity, &show, env_ok, zone);
+            } else {
+                wifi_status_t ws = { 0 };
+                wifi_get_status(&ws);
+                ESP_LOGI(TAG, "WiFi %s ssid=%s rssi=%d %s",
+                         ws.connected ? "UP" : "DOWN", ws.ssid, ws.rssi_dbm, ws.quality);
+                oled_show_wifi(ws.ssid, ws.connected, ws.rssi_dbm, ws.quality);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

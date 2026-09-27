@@ -343,3 +343,31 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
         lcd1602_clock(line0, line1);
     }
 }
+
+void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *quality)
+{
+    char l0[24], l1[32];
+    if (connected) {
+        snprintf(l0, sizeof(l0), "%.16s", ssid);
+        snprintf(l1, sizeof(l1), "CONN %d %s", rssi_dbm, quality);
+    } else {
+        snprintf(l0, sizeof(l0), "%.16s", ssid[0] ? ssid : "(no SSID)");
+        snprintf(l1, sizeof(l1), "DISC no link");
+    }
+    if (s_ok) {
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, "WIFI");
+        oled_text57(0, 2, l0);
+        oled_text57(0, 3, l1);
+        for (uint8_t p = 4; p < 8; p++) {
+            memset(&s_fb[p][0], 0, 128);
+        }
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        char line0[17], line1[17];
+        snprintf(line0, sizeof(line0), "%-16.16s", l0);
+        snprintf(line1, sizeof(line1), "%-16.16s", l1);
+        lcd1602_clock(line0, line1);
+    }
+}

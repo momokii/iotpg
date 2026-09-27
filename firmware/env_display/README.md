@@ -13,20 +13,27 @@ backpack. The firmware auto-discovers displays — see below.
 One unified screen, refreshed every second (sensor re-read every 2 s).
 Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 
-- SSD1306: big `HH:MM`, small `DD-MM-YY WIB SRC`, small `T:25.0C H:60%`.
-- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MMWIBDD-MM-YY` on line 1
+- SSD1306: big `HH:MM`, small `DD-MM WIB SRC`, small `T:25.0C H:60%`.
+- 1602 LCD: `T:25.0C H:60%` on line 0, `HH:MMWIB DD-MM` on line 1
   (16 columns exactly — no room for spaces around WIB).
 - SRC is `RTC` (DS3231), `NTP` (Wi-Fi sync), or `INT` (internal free-run);
-  shown in full on SSD1306 and USB log (1602 shows the zone instead —
+  shown in full on SSD1306 and USB log (1602 shows the WIB zone instead —
   WIB == UTC+7 == Asia/Jakarta, no daylight saving, so the zone alone
   disambiguates).
 
-## Timezone toggle (BOOT button)
+## Pages and button UX (BOOT, GPIO0)
 
-Default is WIB (Asia/Jakarta). Pressing BOOT flips to UTC+0: same date and
-time converted, zone tag switches `WIB`→`UTC`, so both proper dates are one
-click apart. Press again to flip back. (GPIO0 strapping caveat as ever:
-press only while the app runs, never across reset.)
+- Page 0 — main: time/date/env as above.
+- Page 1 — wifi: SSID, link status, live RSSI in dBm + quality word
+  (`Excel ≥−50, Good ≥−60, Fair ≥−70, Weak below`).
+- Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
+  Fire-on-threshold for hold, fire-on-release for short — the standard
+  single-button pattern; more pages slot into the `page` switch.
+  (GPIO0 strapping caveat: press only while the app runs, never across
+  reset — tap EN alone to recover.)
+- Display code consumes Wi-Fi state only through `wifi_status_t`
+  (`wifi_get_status()`) — never Kconfig or esp_wifi calls. Dynamic
+  provisioning later fills the same struct; consumers don't change.
 
 (Humidity prints without decimals on purpose: the DHT11 only resolves
 whole percents. Temperature keeps one decimal so a future DHT22 swap
