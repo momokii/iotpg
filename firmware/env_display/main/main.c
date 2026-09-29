@@ -21,6 +21,7 @@
 #include "oled.h"
 #include "rtc.h"
 #include "wifi.h"
+#include "geo.h"
 
 static const char *TAG = "env_display";
 
@@ -49,6 +50,8 @@ void app_main(void)
     if (wifi_sntp_sync()) {
         envclock_note_ntp_sync();
     }
+    geo_init();
+    geo_start();
     oled_text1206(0, 0, "DHT11 TEMP/HUM");
     oled_update();
 
@@ -56,15 +59,16 @@ void app_main(void)
     bool env_ok = false;
     int tick = 0, held = 0, tz_utc = 0, page = 0;
     bool long_fired = false;
-    ESP_LOGI(TAG, "pages: 0 main, 1 wifi — short press toggles WIB/UTC, hold flips page");
+    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where — short press toggles WIB/UTC, hold flips page");
 
     while (1) {
         if (gpio_get_level(BTN_GPIO) == 0) {
             held++;
             if (held >= LONG_TICKS && !long_fired) {
                 long_fired = true;
-                page ^= 1;
-                ESP_LOGI(TAG, "page %d (%s)", page, page ? "wifi" : "main");
+                page = (page + 1) % 3;
+                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : "where");
+                ESP_LOGI(TAG, "page %d (%s)", page, pname);
             }
         } else {
             if (held > 0 && held < LONG_TICKS && !long_fired) {
@@ -99,12 +103,16 @@ void app_main(void)
                     }
                     oled_show_all(temperature, humidity, &show, env_ok, zone);
                 }
-            } else {
+            } else if (page == 1) {
                 wifi_status_t ws = { 0 };
                 wifi_get_status(&ws);
                 ESP_LOGI(TAG, "WiFi %s ssid=%s rssi=%d %s",
                          ws.connected ? "UP" : "DOWN", ws.ssid, ws.rssi_dbm, ws.quality);
                 oled_show_wifi(ws.ssid, ws.connected, ws.rssi_dbm, ws.quality);
+            } else {
+                geo_fix_t fix = { 0 };
+                geo_get(&fix);
+                oled_show_geo(&fix);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

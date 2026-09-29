@@ -372,3 +372,54 @@ void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *
         lcd1602_clock(line0, line1);
     }
 }
+
+void oled_show_geo(const geo_fix_t *fix)
+{
+    char l0[24], l1[32], l2[32];
+    if (!fix->has_fix) {
+        snprintf(l0, sizeof(l0), "no fix yet");
+        snprintf(l1, sizeof(l1), "wait for lookup");
+        snprintf(l2, sizeof(l2), "                ");
+    } else {
+        long age = (long)(time(NULL) - fix->updated);
+        char coords[20];
+        snprintf(coords, sizeof(coords), "%.4f,%.4f", fix->lat, fix->lon);
+        if (fix->place[0]) {
+            snprintf(l0, sizeof(l0), "%.16s", fix->place);
+        } else {
+            snprintf(l0, sizeof(l0), "%.16s", coords);
+        }
+        if (fix->stale) {
+            snprintf(l1, sizeof(l1), "OLD %s", coords);
+            snprintf(l2, sizeof(l2), "%ldm ago +-%dm", age / 60, (int)fix->accuracy_m);
+        } else {
+            snprintf(l1, sizeof(l1), "%s", coords);
+            snprintf(l2, sizeof(l2), "+-%dm fresh", (int)fix->accuracy_m);
+        }
+    }
+    if (s_ok) {
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, "WHERE");
+        oled_text57(0, 2, l0);
+        oled_text57(0, 3, l1);
+        oled_text57(0, 4, l2);
+        for (uint8_t p = 5; p < 8; p++) {
+            memset(&s_fb[p][0], 0, 128);
+        }
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        char line0[17], line1[17];
+        if (!fix->has_fix) {
+            snprintf(line0, sizeof(line0), "no fix yet      ");
+            snprintf(line1, sizeof(line1), "wait for lookup ");
+        } else if (fix->stale) {
+            snprintf(line0, sizeof(line0), "%-16.16s", l0);
+            snprintf(line1, sizeof(line1), "OLD %-12.12s", l1);
+        } else {
+            snprintf(line0, sizeof(line0), "%-16.16s", l0);
+            snprintf(line1, sizeof(line1), "%-16.16s", l1);
+        }
+        lcd1602_clock(line0, line1);
+    }
+}

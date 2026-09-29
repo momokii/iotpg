@@ -2,6 +2,7 @@
 
 dependencies:
   esp-idf-lib/dht: "*"
+  espressif/cjson: "*"
   # NOTE: espressif/ssd1306 was rejected — it targets the legacy I2C driver
   # (driver/i2c.h), removed in ESP-IDF v6. This project drives the SSD1306
   # directly via driver/i2c_master.h (see oled.c) and vendors only the

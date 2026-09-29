@@ -27,6 +27,10 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 - Page 1 — wifi, in plain words: network name, then `Signal: Strong /
   Good / OK / Weak`, or `Not connected`. No decibels on glass (dBm stays
   in the USB log for diagnostics).
+- Page 2 — where: place name, coordinates, accuracy + age. Examples:
+  `Bogor, Jawa Barat` / `-6.59444,106.78900` / `+-25000m fresh`. Stale
+  fixes show `OLD` plus minutes since update; with no fix ever it says
+  `no fix yet / wait for lookup`. NVS keeps the last fix across reboots.
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.
@@ -102,6 +106,19 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
 - **Crash-loop lesson:** moving wires while powered browned out the board and
   corrupted flash twice; recovery is reflash of any known-good build.
   USB out before touching wires, always.
+- **Heavy network work gets its own task:** the geo lookup (blocking scan,
+  TLS handshake, JSON parse) overflowed app_main's 3.5 KB stack and rebooted
+  the board every ~16 s. It now runs in a dedicated 12 KB task; displays
+  must additionally never abort (all I2C failures disable gracefully).
+
+## Location (no GPS hardware)
+
+WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
+(keyless) → Nominatim reverse-geocode (keyless) → city + province on
+screen. First real fix: `-6.59444,106.78900`, `Bogor, Jawa Barat`,
+±25 km — street-level needs denser BeaconDB coverage here; the API's
+accuracy radius always says how much to trust. Lookups run 15 s after
+boot then every 15 min; the last fix persists in NVS across reboots.
 
 ## Build / flash / monitor
 
