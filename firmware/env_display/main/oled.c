@@ -424,7 +424,9 @@ void oled_show_geo(const geo_fix_t *fix)
     } else {
         long age = (long)(time(NULL) - fix->updated);
         char agestr[12];
-        if (age < 60) {
+        if (age < 0) {
+            snprintf(agestr, sizeof(agestr), "-- ago");
+        } else if (age < 60) {
             snprintf(agestr, sizeof(agestr), "%lds ago", age < 0 ? 0 : age);
         } else if (age < 3600) {
             snprintf(agestr, sizeof(agestr), "%ldm ago", age / 60);
