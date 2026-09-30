@@ -20,6 +20,7 @@
 | TASK-014 | BOOT toggles WIB/UTC timezone with proper dates | Low | DONE (toggle verified in code + boot log; user to confirm glass) | S | TASK-013 | Timezone mode in `firmware/env_display` | One click flips zone + date correctly | None (GPIO0 strapping caveat documented) |
 | TASK-015 | WiFi info page + short/long-press button UX, provisioning-ready seam | Medium | DONE (boot verified; user to confirm hold-flips-page on glass) | M | TASK-014 | Pages + `wifi_status_t` in `firmware/env_display` | SSID/status/RSSI visible; hold flips page, short toggles zone | None |
 | TASK-016 | WiFi geolocation + place names + persistent last fix | High | DONE (live fix Bogor Jawa Barat ±25 km; NVS cache; stale handling; verified on monitor) | M | TASK-015 | Geo pipeline + Where page in `firmware/env_display` | Coords + place + accuracy + age on screen; survives offline/reboot | Nearby AP MACs sent to BeaconDB (learning-OK, eyes open) |
+| TASK-017 | Scrolling place marquee + accuracy/age replacing raw coords | Low | DONE (bouncing marquee per screen width; verified boot on monitor) | S | TASK-016 | Marquee + human Where page in `firmware/env_display` | Long names scroll instead of truncating; no lat/lon on glass | None |
 
 ### Template Format (use for every task added)
 

@@ -373,8 +373,49 @@ void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *
     }
 }
 
+/* Marquee: long place names scroll in a width-sized window, bouncing
+ * with a short dwell at each end so both edges stay readable. Each
+ * screen width scrolls on its own state so the 16-char LCD and the
+ * 21-char OLED stay in sync with themselves, not each other. */
+typedef struct {
+    int pos;
+    int dir;
+    int dwell;
+} marquee_t;
+
+static void marquee(char *dst, size_t dstsz, const char *text, size_t width, marquee_t *m)
+{
+    size_t len = strlen(text);
+    if (len <= width) {
+        snprintf(dst, dstsz, "%s", text);
+        m->pos = 0;
+        m->dir = 1;
+        m->dwell = 0;
+        return;
+    }
+    if (m->dwell > 0) {
+        m->dwell--;
+    } else {
+        m->pos += m->dir;
+        if (m->pos <= 0) {
+            m->pos = 0;
+            m->dir = 1;
+            m->dwell = 2;
+        } else if ((size_t)m->pos + width >= len) {
+            m->pos = (int)(len - width);
+            m->dir = -1;
+            m->dwell = 2;
+        }
+    }
+    size_t n = width < dstsz - 1 ? width : dstsz - 1;
+    memcpy(dst, text + m->pos, n);
+    dst[n] = '\0';
+}
+
 void oled_show_geo(const geo_fix_t *fix)
 {
+    static marquee_t m_big = { 0, 1, 0 };
+    static marquee_t m_small = { 0, 1, 0 };
     char l0[24], l1[32], l2[32];
     if (!fix->has_fix) {
         snprintf(l0, sizeof(l0), "no fix yet");
@@ -382,28 +423,37 @@ void oled_show_geo(const geo_fix_t *fix)
         snprintf(l2, sizeof(l2), "                ");
     } else {
         long age = (long)(time(NULL) - fix->updated);
-        char coords[20];
-        snprintf(coords, sizeof(coords), "%.4f,%.4f", fix->lat, fix->lon);
-        if (fix->place[0]) {
-            snprintf(l0, sizeof(l0), "%.16s", fix->place);
+        char agestr[12];
+        if (age < 60) {
+            snprintf(agestr, sizeof(agestr), "%lds ago", age < 0 ? 0 : age);
+        } else if (age < 3600) {
+            snprintf(agestr, sizeof(agestr), "%ldm ago", age / 60);
         } else {
-            snprintf(l0, sizeof(l0), "%.16s", coords);
+            snprintf(agestr, sizeof(agestr), "%ldh ago", age / 3600);
         }
-        if (fix->stale) {
-            snprintf(l1, sizeof(l1), "OLD %s", coords);
-            snprintf(l2, sizeof(l2), "%ldm ago +-%dm", age / 60, (int)fix->accuracy_m);
+        char accstr[12];
+        if (fix->accuracy_m >= 1000) {
+            snprintf(accstr, sizeof(accstr), "+-%.0fkm", (double)fix->accuracy_m / 1000);
         } else {
-            snprintf(l1, sizeof(l1), "%s", coords);
-            snprintf(l2, sizeof(l2), "+-%dm fresh", (int)fix->accuracy_m);
+            snprintf(accstr, sizeof(accstr), "+-%dm", (int)fix->accuracy_m);
         }
+        char place[GEO_PLACE_LEN + 5];
+        snprintf(place, sizeof(place), "%s%s", fix->stale ? "OLD " : "", fix->place);
+        char info[32];
+        snprintf(info, sizeof(info), "%s %s", accstr, agestr);
+        char win_big[24], win_small[20];
+        marquee(win_big, sizeof(win_big), place, 21, &m_big);
+        marquee(win_small, sizeof(win_small), place, 16, &m_small);
+        snprintf(l0, sizeof(l0), "%s", win_big);
+        snprintf(l1, sizeof(l1), "%s", info);
+        snprintf(l2, sizeof(l2), "%s", win_small);
     }
     if (s_ok) {
         oled_text1206(0, 0, "                ");
         oled_text1206(0, 0, "WHERE");
         oled_text57(0, 2, l0);
         oled_text57(0, 3, l1);
-        oled_text57(0, 4, l2);
-        for (uint8_t p = 5; p < 8; p++) {
+        for (uint8_t p = 4; p < 8; p++) {
             memset(&s_fb[p][0], 0, 128);
         }
         oled_update();
@@ -413,11 +463,8 @@ void oled_show_geo(const geo_fix_t *fix)
         if (!fix->has_fix) {
             snprintf(line0, sizeof(line0), "no fix yet      ");
             snprintf(line1, sizeof(line1), "wait for lookup ");
-        } else if (fix->stale) {
-            snprintf(line0, sizeof(line0), "%-16.16s", l0);
-            snprintf(line1, sizeof(line1), "OLD %-12.12s", l1);
         } else {
-            snprintf(line0, sizeof(line0), "%-16.16s", l0);
+            snprintf(line0, sizeof(line0), "%-16.16s", l2);
             snprintf(line1, sizeof(line1), "%-16.16s", l1);
         }
         lcd1602_clock(line0, line1);
