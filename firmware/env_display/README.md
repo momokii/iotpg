@@ -27,6 +27,9 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 - Page 1 — wifi, in plain words: network name, then `Signal: Strong /
   Good / OK / Weak`, or `Not connected`. No decibels on glass (dBm stays
   in the USB log for diagnostics).
+- Page 2 — where: place name (scrolls if long), accuracy + fix age.
+- Page 3 — stats: today's min/max temp+humidity, trend arrow (^ up,
+  v down, - flat vs 10 min ago), comfort word, dew point.
 - Page 2 — where: place name, coordinates, accuracy + age. Examples:
   `Bogor, Jawa Barat` / `-6.59444,106.78900` / `+-25000m fresh`. Stale
   fixes show `OLD` plus minutes since update; with no fix ever it says
@@ -116,8 +119,17 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
   the board every ~16 s. It now runs in a dedicated 12 KB task; displays
   must additionally never abort (all I2C failures disable gracefully).
 
-## Location (no GPS hardware)
+## Stats page (daily extremes, trend, comfort, dew point)
 
+- Min/max temp+humidity with timestamps, persisted in NVS and reset on
+  date rollover — reboots never lose today's extremes.
+- Trend arrow vs 10 minutes ago (`^`/`v`/`-`, ±0.5 °C deadband).
+- Comfort word from ASHRAE-grounded bands: 30–60 % RH comfortable;
+  ≥70 % muggy (mold watch), <30 % dry; over 30 °C hot, under 18 °C cold.
+- Dew point via Magnus-Tetens (b=17.625, c=243.04): the number that
+  predicts condensation and mold risk better than RH alone.
+
+## Location (no GPS hardware)
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
 (keyless) → Nominatim reverse-geocode (keyless) → city + province on
 screen. First real fix: `-6.59444,106.78900`, `Bogor, Jawa Barat`,

@@ -22,6 +22,7 @@
 #include "rtc.h"
 #include "wifi.h"
 #include "geo.h"
+#include "stats.h"
 
 static const char *TAG = "env_display";
 
@@ -51,6 +52,7 @@ void app_main(void)
         envclock_note_ntp_sync();
     }
     geo_init();
+    stats_init();
     geo_start();
     oled_text1206(0, 0, "DHT11 TEMP/HUM");
     oled_update();
@@ -59,15 +61,15 @@ void app_main(void)
     bool env_ok = false;
     int tick = 0, held = 0, tz_utc = 0, page = 0;
     bool long_fired = false;
-    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where — short press toggles WIB/UTC, hold flips page");
+    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where, 3 stats — short press toggles WIB/UTC, hold flips page");
 
     while (1) {
         if (gpio_get_level(BTN_GPIO) == 0) {
             held++;
             if (held >= LONG_TICKS && !long_fired) {
                 long_fired = true;
-                page = (page + 1) % 3;
-                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : "where");
+                page = (page + 1) % 4;
+                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : (page == 2 ? "where" : "stats"));
                 ESP_LOGI(TAG, "page %d (%s)", page, pname);
             }
         } else {
@@ -83,6 +85,7 @@ void app_main(void)
             if (dht_read_float_data(DHT_TYPE, DHT_PIN, &humidity, &temperature) == ESP_OK) {
                 ESP_LOGI(TAG, "Temp: %.1f C  Hum: %.1f %%", temperature, humidity);
                 env_ok = true;
+                stats_record(temperature, humidity);
             } else {
                 ESP_LOGW(TAG, "DHT read failed — check wiring (DATA->21, VCC->3V3, GND->GND)");
                 env_ok = false;
@@ -109,10 +112,12 @@ void app_main(void)
                 ESP_LOGI(TAG, "WiFi %s ssid=%s rssi=%d %s",
                          ws.connected ? "UP" : "DOWN", ws.ssid, ws.rssi_dbm, ws.quality);
                 oled_show_wifi(ws.ssid, ws.connected, ws.rssi_dbm, ws.quality);
-            } else {
+            } else if (page == 2) {
                 geo_fix_t fix = { 0 };
                 geo_get(&fix);
                 oled_show_geo(&fix);
+            } else {
+                oled_show_stats(temperature, humidity);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

@@ -17,6 +17,7 @@
 #include "font57.h"
 #include "lcd1602.h"
 #include "rtc.h"
+#include "stats.h"
 
 #define OLED_SDA_PIN 22
 #define OLED_SCL_PIN 23
@@ -467,6 +468,51 @@ void oled_show_geo(const geo_fix_t *fix)
             snprintf(line1, sizeof(line1), "wait for lookup ");
         } else {
             snprintf(line0, sizeof(line0), "%-16.16s", l2);
+            snprintf(line1, sizeof(line1), "%-16.16s", l1);
+        }
+        lcd1602_clock(line0, line1);
+    }
+}
+
+void oled_show_stats(float temperature, float humidity)
+{
+    char l0[24], l1[32], l2[32];
+    if (!stats_have()) {
+        snprintf(l0, sizeof(l0), "warming up");
+        snprintf(l1, sizeof(l1), "wait for reads");
+        snprintf(l2, sizeof(l2), "                ");
+    } else {
+        time_t tmax_t = 0, tmin_t = 0;
+        float tmax = stats_tmax(&tmax_t), tmin = stats_tmin(&tmin_t);
+        float dew = stats_dew_point(temperature, humidity);
+        const char *word = stats_comfort_word(stats_comfort(temperature, humidity));
+        char tr = stats_trend(temperature);
+        snprintf(l0, sizeof(l0), "Hi %.0f Lo %.0f %c", tmax, tmin, tr);
+        snprintf(l1, sizeof(l1), "%s Dew %.0f", word, (double)dew);
+        struct tm a = { 0 }, b = { 0 };
+        localtime_r(&tmax_t, &a);
+        localtime_r(&tmin_t, &b);
+        snprintf(l2, sizeof(l2), "%02d:%02d %02d:%02d",
+                 a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
+    }
+    if (s_ok) {
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, "STATS");
+        oled_text57(0, 2, l0);
+        oled_text57(0, 3, l1);
+        oled_text57(0, 4, l2);
+        for (uint8_t p = 5; p < 8; p++) {
+            memset(&s_fb[p][0], 0, 128);
+        }
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        char line0[17], line1[17];
+        if (!stats_have()) {
+            snprintf(line0, sizeof(line0), "warming up      ");
+            snprintf(line1, sizeof(line1), "wait for reads  ");
+        } else {
+            snprintf(line0, sizeof(line0), "%-16.16s", l0);
             snprintf(line1, sizeof(line1), "%-16.16s", l1);
         }
         lcd1602_clock(line0, line1);
