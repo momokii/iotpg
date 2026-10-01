@@ -28,6 +28,7 @@ static const char *TAG = "wifi";
 static EventGroupHandle_t s_events;
 static bool s_ntp = false;
 static bool s_connected = false;
+static bool s_ever_dropped = false;
 static char s_ssid[sizeof(((wifi_config_t *)0)->sta.ssid)] = { 0 };
 
 static void on_sntp(struct timeval *tv)
@@ -45,10 +46,15 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
         esp_wifi_connect();
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
         s_connected = false;
+        s_ever_dropped = true;
         ESP_LOGI(TAG, "disconnected, retrying...");
         esp_wifi_connect();
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         s_connected = true;
+        if (s_ever_dropped) {
+            ESP_LOGI(TAG, "reconnected — re-syncing clock now");
+            esp_sntp_restart();
+        }
         xEventGroupSetBits(s_events, GOT_IP_BIT);
     }
 }

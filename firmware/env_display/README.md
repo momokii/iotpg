@@ -63,6 +63,11 @@ No network needed, but precision depends on hardware you attach:
 
 Priority is DS3231 > NTP > internal. Timezone is WIB (UTC+7).
 
+Reconnects re-sync immediately: any drop auto-retries the join, and the
+first new IP restarts SNTP on the spot (plus the regular hourly
+re-sync), so the clock self-heals seconds after Wi-Fi returns instead
+of waiting out the hour.
+
 ## Wi-Fi config (static for now)
 
 Credentials live in Kconfig with **empty** committed defaults
