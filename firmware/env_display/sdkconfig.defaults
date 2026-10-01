@@ -3,3 +3,7 @@
 # they are stored in the gitignored `sdkconfig`, never in this repo.
 CONFIG_WIFI_SSID=""
 CONFIG_WIFI_PASSWORD=""
+# Task watchdog: the geo task's TLS handshake does seconds of pure crypto
+# compute that starves the idle tasks; 5 s default fires warnings mid-lookup.
+# 30 s still guards real hangs while tolerating known-long TLS work.
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
