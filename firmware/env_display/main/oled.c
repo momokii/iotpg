@@ -487,8 +487,8 @@ void oled_show_stats(float temperature, float humidity)
         float dew = stats_dew_point(temperature, humidity);
         const char *word = stats_comfort_word(stats_comfort(temperature, humidity));
         char tr = stats_trend(temperature);
-        snprintf(l0, sizeof(l0), "Hi %.0f Lo %.0f %c", tmax, tmin, tr);
-        snprintf(l1, sizeof(l1), "%s Dew %.0f", word, (double)dew);
+        snprintf(l0, sizeof(l0), "Hi%.0fC Lo%.0fC %c", tmax, tmin, tr);
+        snprintf(l1, sizeof(l1), "%s Dew%.0fC", word, (double)dew);
         struct tm a = { 0 }, b = { 0 };
         localtime_r(&tmax_t, &a);
         localtime_r(&tmin_t, &b);

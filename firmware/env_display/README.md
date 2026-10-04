@@ -129,6 +129,12 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
 - Dew point via Magnus-Tetens (b=17.625, c=243.04): the number that
   predicts condensation and mold risk better than RH alone.
 
+Field guide (what each piece means on glass):
+`Hi26C` = today's highest temp · `Lo24C` = today's lowest ·
+`^` rising / `v` falling / `-` flat vs 10 min ago ·
+`Comfort` = verdict for the room right now ·
+`Dew18C` = dew point — surfaces colder than this get wet.
+
 ## Location (no GPS hardware)
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
 (keyless) → Nominatim reverse-geocode (keyless) → city + province on
