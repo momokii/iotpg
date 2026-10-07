@@ -128,12 +128,9 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
   ≥70 % muggy (mold watch), <30 % dry; over 30 °C hot, under 18 °C cold.
 - Dew point via Magnus-Tetens (b=17.625, c=243.04): the number that
   predicts condensation and mold risk better than RH alone.
-
-Field guide (what each piece means on glass):
-`Hi26C` = today's highest temp · `Lo24C` = today's lowest ·
-`^` rising / `v` falling / `-` flat vs 10 min ago ·
-`Comfort` = verdict for the room right now ·
-`Dew18C` = dew point — surfaces colder than this get wet.
+- Written in plain words on purpose: `Today 24-26C ^`, `Feels Comfort`,
+  `Hum 44-60%`, `Dew point 18C` — a stranger reads the screen with no
+  manual. Long content alternates every 4 s to fit 16 columns.
 ## Location (no GPS hardware)
 
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate

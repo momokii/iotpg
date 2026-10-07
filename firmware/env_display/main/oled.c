@@ -478,6 +478,10 @@ void oled_show_geo(const geo_fix_t *fix)
 
 void oled_show_stats(float temperature, float humidity)
 {
+    /* Two views alternate every 4 s so 16 columns stay readable:
+     * view A = today's temp range plus trend, view B = humidity range
+     * plus dew point. Words, not codes: Today / Feels / Dew point. */
+    static int calls = 0;
     char l0[24], l1[32], l2[32];
     if (!stats_have()) {
         snprintf(l0, sizeof(l0), "warming up");
@@ -486,20 +490,27 @@ void oled_show_stats(float temperature, float humidity)
     } else {
         time_t tmax_t = 0, tmin_t = 0;
         float tmax = stats_tmax(&tmax_t), tmin = stats_tmin(&tmin_t);
+        float hmax = stats_hmax(NULL), hmin = stats_hmin(NULL);
         float dew = stats_dew_point(temperature, humidity);
         const char *word = stats_comfort_word(stats_comfort(temperature, humidity));
         char tr = stats_trend(temperature);
-        snprintf(l0, sizeof(l0), "Hi%.0fC Lo%.0fC %c", tmax, tmin, tr);
-        snprintf(l1, sizeof(l1), "%s Dew%.0fC", word, (double)dew);
         struct tm a = { 0 }, b = { 0 };
         localtime_r(&tmax_t, &a);
         localtime_r(&tmin_t, &b);
-        snprintf(l2, sizeof(l2), "%02d:%02d %02d:%02d",
+        if ((calls / 4) % 2 == 0) {
+            snprintf(l0, sizeof(l0), "Today %.0f-%.0fC %c", tmin, tmax, tr);
+            snprintf(l1, sizeof(l1), "Feels %s", word);
+        } else {
+            snprintf(l0, sizeof(l0), "Hum %.0f-%.0f%%", hmin, hmax);
+            snprintf(l1, sizeof(l1), "Dew point %.0fC", (double)dew);
+        }
+        snprintf(l2, sizeof(l2), "High %02d:%02d Low %02d:%02d",
                  a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
     }
+    calls++;
     if (s_ok) {
         oled_text1206(0, 0, "                ");
-        oled_text1206(0, 0, "STATS");
+        oled_text1206(0, 0, "TODAY");
         oled_text57(0, 2, l0);
         oled_text57(0, 3, l1);
         oled_text57(0, 4, l2);
