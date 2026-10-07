@@ -419,31 +419,33 @@ void oled_show_geo(const geo_fix_t *fix)
     static marquee_t m_small = { 0, 1, 0 };
     char l0[24], l1[32], l2[32];
     if (!fix->has_fix) {
-        snprintf(l0, sizeof(l0), "no fix yet");
-        snprintf(l1, sizeof(l1), "wait for lookup");
+        snprintf(l0, sizeof(l0), "Finding you");
+        snprintf(l1, sizeof(l1), "one moment");
         snprintf(l2, sizeof(l2), "                ");
     } else {
         long age = (long)(time(NULL) - fix->updated);
         char agestr[12];
         if (age < 0) {
-            snprintf(agestr, sizeof(agestr), "-- ago");
+            snprintf(agestr, sizeof(agestr), "--");
         } else if (age < 60) {
-            snprintf(agestr, sizeof(agestr), "%lds ago", age < 0 ? 0 : age);
+            snprintf(agestr, sizeof(agestr), "just now");
         } else if (age < 3600) {
             snprintf(agestr, sizeof(agestr), "%ldm ago", age / 60);
         } else {
             snprintf(agestr, sizeof(agestr), "%ldh ago", age / 3600);
         }
-        char accstr[12];
-        if (fix->accuracy_m >= 1000) {
-            snprintf(accstr, sizeof(accstr), "+-%.0fkm", (double)fix->accuracy_m / 1000);
-        } else {
-            snprintf(accstr, sizeof(accstr), "+-%dm", (int)fix->accuracy_m);
+        const char *accword = "Rough";
+        if (fix->accuracy_m < 100) {
+            accword = "Here";
+        } else if (fix->accuracy_m < 1000) {
+            accword = "Near";
+        } else if (fix->accuracy_m < 10000) {
+            accword = "Around";
         }
         char place[GEO_PLACE_LEN + 5];
         snprintf(place, sizeof(place), "%s%s", fix->stale ? "OLD " : "", fix->place);
         char info[32];
-        snprintf(info, sizeof(info), "%s %s", accstr, agestr);
+        snprintf(info, sizeof(info), "%s %s", accword, agestr);
         char win_big[24], win_small[20];
         marquee(win_big, sizeof(win_big), place, 21, &m_big);
         marquee(win_small, sizeof(win_small), place, 16, &m_small);

@@ -134,14 +134,19 @@ Field guide (what each piece means on glass):
 `^` rising / `v` falling / `-` flat vs 10 min ago ·
 `Comfort` = verdict for the room right now ·
 `Dew18C` = dew point — surfaces colder than this get wet.
-
 ## Location (no GPS hardware)
+
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
 (keyless) → Nominatim reverse-geocode (keyless) → city + province on
 screen. First real fix: `-6.59444,106.78900`, `Bogor, Jawa Barat`,
 ±25 km — street-level needs denser BeaconDB coverage here; the API's
 accuracy radius always says how much to trust. Lookups run 15 s after
 boot then every 15 min; the last fix persists in NVS across reboots.
+
+The Where page speaks human, never engineer: place name (scrolling if
+long), then `Here/Near/Around/Rough` plus `just now/5m ago/2h ago`
+instead of coordinates and meters. Raw lat/lon stay in the USB log.
+Before any fix: `Finding you / one moment`.
 
 ## Build / flash / monitor
 
