@@ -7,3 +7,7 @@ CONFIG_WIFI_PASSWORD=""
 # compute that starves the idle tasks; 5 s default fires warnings mid-lookup.
 # 30 s still guards real hangs while tolerating known-long TLS work.
 CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
+# Custom partition table: 1.5 MiB factory app (dashboard + diagnostics no
+# longer fit the stock 1 MiB). NVS/PHY offsets unchanged; see partitions.csv.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
