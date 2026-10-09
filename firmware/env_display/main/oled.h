@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "esp_err.h"
+#include "diag.h"
 #include "geo.h"
 #include "weather.h"
 
@@ -23,6 +24,7 @@ void oled_show_env(float temperature, float humidity);
 void oled_show_error(void);
 void oled_show_all(float temperature, float humidity, const struct tm *t, bool env_ok, const char *zone);
 void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *quality);
+void oled_show_diag(const diag_snapshot_t *diag);
 void oled_show_geo(const geo_fix_t *fix);
 void oled_show_stats(float temperature, float humidity);
 void oled_show_wx(const wx_t *wx);

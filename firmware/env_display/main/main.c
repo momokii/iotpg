@@ -21,6 +21,8 @@
 #include "oled.h"
 #include "rtc.h"
 #include "wifi.h"
+#include "dashboard.h"
+#include "diag.h"
 #include "geo.h"
 #include "stats.h"
 #include "weather.h"
@@ -52,6 +54,10 @@ void app_main(void)
     if (wifi_sntp_sync()) {
         envclock_note_ntp_sync();
     }
+    if (wifi_is_configured()) {
+        dashboard_init();
+    }
+    diag_init();
     geo_init();
     stats_init();
     wx_init();
@@ -63,15 +69,15 @@ void app_main(void)
     bool env_ok = false;
     int tick = 0, held = 0, tz_utc = 0, page = 0;
     bool long_fired = false;
-    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where, 3 stats, 4 outside — short press toggles WIB/UTC, hold flips page");
+    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where, 3 stats, 4 outside, 5 diag — short press toggles WIB/UTC, hold flips page");
 
     while (1) {
         if (gpio_get_level(BTN_GPIO) == 0) {
             held++;
             if (held >= LONG_TICKS && !long_fired) {
                 long_fired = true;
-                page = (page + 1) % 5;
-                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : (page == 2 ? "where" : (page == 3 ? "stats" : "outside")));
+                page = (page + 1) % 6;
+                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : (page == 2 ? "where" : (page == 3 ? "stats" : (page == 4 ? "outside" : "diag"))));
                 ESP_LOGI(TAG, "page %d (%s)", page, pname);
             }
         } else {
@@ -92,6 +98,7 @@ void app_main(void)
                 ESP_LOGW(TAG, "DHT read failed — check wiring (DATA->21, VCC->3V3, GND->GND)");
                 env_ok = false;
             }
+            dashboard_publish_env(temperature, humidity, env_ok);
         }
         if (tick % 10 == 0) {
             if (page == 0) {
@@ -120,10 +127,14 @@ void app_main(void)
                 oled_show_geo(&fix);
             } else if (page == 3) {
                 oled_show_stats(temperature, humidity);
-            } else {
+            } else if (page == 4) {
                 wx_t w = { 0 };
                 wx_get(&w);
                 oled_show_wx(&w);
+            } else {
+                diag_snapshot_t diag = { 0 };
+                diag_get(&diag);
+                oled_show_diag(&diag);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

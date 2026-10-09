@@ -376,6 +376,63 @@ void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *
     }
 }
 
+void oled_show_diag(const diag_snapshot_t *diag)
+{
+    if (diag == NULL) {
+        return;
+    }
+
+    char uptime[40], heap[24], minimum_heap[24], reboots[24], wifi[32];
+    unsigned long long uptime_seconds = (unsigned long long)diag->uptime_seconds;
+    unsigned long long uptime_minutes = uptime_seconds / 60;
+    unsigned long long uptime_hours = uptime_minutes / 60;
+
+    if (uptime_hours > 0) {
+        snprintf(uptime, sizeof(uptime), "Uptime: %lluh %llum", uptime_hours,
+                 uptime_minutes % 60);
+    } else {
+        snprintf(uptime, sizeof(uptime), "Uptime: %llum %llus", uptime_minutes,
+                 uptime_seconds % 60);
+    }
+    snprintf(heap, sizeof(heap), "Heap: %lu KB", (unsigned long)(diag->free_heap_bytes / 1024));
+    snprintf(minimum_heap, sizeof(minimum_heap), "Min: %lu KB",
+             (unsigned long)(diag->minimum_free_heap_bytes / 1024));
+    snprintf(reboots, sizeof(reboots), "Reboots: %lu", (unsigned long)diag->reboot_count);
+    if (diag->wifi.connected) {
+        snprintf(wifi, sizeof(wifi), "Signal: %s",
+                 diag->wifi.quality ? diag->wifi.quality : "Unknown");
+    } else {
+        snprintf(wifi, sizeof(wifi), "Not connected");
+    }
+
+    if (s_ok) {
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, "DIAGNOSTICS");
+        oled_text57(0, 2, uptime);
+        oled_text57(0, 3, heap);
+        oled_text57(0, 4, minimum_heap);
+        oled_text57(0, 5, reboots);
+        oled_text57(0, 6, wifi);
+        memset(&s_fb[7][0], 0, 128);
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        char lcd_uptime[40], lcd_status[48], line0[17], line1[17];
+        if (uptime_hours > 0) {
+            snprintf(lcd_uptime, sizeof(lcd_uptime), "U:%lluh H:%luK", uptime_hours,
+                     (unsigned long)(diag->free_heap_bytes / 1024));
+        } else {
+            snprintf(lcd_uptime, sizeof(lcd_uptime), "U:%llum H:%luK", uptime_minutes,
+                     (unsigned long)(diag->free_heap_bytes / 1024));
+        }
+        snprintf(lcd_status, sizeof(lcd_status), "R%lu %s", (unsigned long)diag->reboot_count,
+                 wifi);
+        snprintf(line0, sizeof(line0), "%-16.16s", lcd_uptime);
+        snprintf(line1, sizeof(line1), "%-16.16s", lcd_status);
+        lcd1602_clock(line0, line1);
+    }
+}
+
 /* Marquee: long place names scroll in a width-sized window, bouncing
  * with a short dwell at each end so both edges stay readable. Each
  * screen width scrolls on its own state so the 16-char LCD and the
