@@ -23,6 +23,7 @@
 #include "wifi.h"
 #include "geo.h"
 #include "stats.h"
+#include "weather.h"
 
 static const char *TAG = "env_display";
 
@@ -53,6 +54,7 @@ void app_main(void)
     }
     geo_init();
     stats_init();
+    wx_init();
     geo_start();
     oled_text1206(0, 0, "DHT11 TEMP/HUM");
     oled_update();
@@ -61,15 +63,15 @@ void app_main(void)
     bool env_ok = false;
     int tick = 0, held = 0, tz_utc = 0, page = 0;
     bool long_fired = false;
-    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where, 3 stats — short press toggles WIB/UTC, hold flips page");
+    ESP_LOGI(TAG, "pages: 0 main, 1 wifi, 2 where, 3 stats, 4 outside — short press toggles WIB/UTC, hold flips page");
 
     while (1) {
         if (gpio_get_level(BTN_GPIO) == 0) {
             held++;
             if (held >= LONG_TICKS && !long_fired) {
                 long_fired = true;
-                page = (page + 1) % 4;
-                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : (page == 2 ? "where" : "stats"));
+                page = (page + 1) % 5;
+                const char *pname = page == 0 ? "main" : (page == 1 ? "wifi" : (page == 2 ? "where" : (page == 3 ? "stats" : "outside")));
                 ESP_LOGI(TAG, "page %d (%s)", page, pname);
             }
         } else {
@@ -116,8 +118,12 @@ void app_main(void)
                 geo_fix_t fix = { 0 };
                 geo_get(&fix);
                 oled_show_geo(&fix);
-            } else {
+            } else if (page == 3) {
                 oled_show_stats(temperature, humidity);
+            } else {
+                wx_t w = { 0 };
+                wx_get(&w);
+                oled_show_wx(&w);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(TICK_MS));

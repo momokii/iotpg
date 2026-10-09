@@ -28,12 +28,13 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
   Good / OK / Weak`, or `Not connected`. No decibels on glass (dBm stays
   in the USB log for diagnostics).
 - Page 2 — where: place name (scrolls if long), accuracy + fix age.
+  Stale fixes show `OLD` plus minutes since update; with no fix ever it
+  says `Finding you / one moment`. NVS keeps the last fix across reboots.
 - Page 3 — stats: today's min/max temp+humidity, trend arrow (^ up,
   v down, - flat vs 10 min ago), comfort word, dew point.
-- Page 2 — where: place name, coordinates, accuracy + age. Examples:
-  `Bogor, Jawa Barat` / `-6.59444,106.78900` / `+-25000m fresh`. Stale
-  fixes show `OLD` plus minutes since update; with no fix ever it says
-  `no fix yet / wait for lookup`. NVS keeps the last fix across reboots.
+- Page 4 — outside: outdoor temp + condition word (`Out 25C Fair`),
+  rain chance next hours (`Rain 46%`), feels-like on roomy screens.
+  Same NVS + stale handling as location.
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.
@@ -136,7 +137,6 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
   silently borrow a stale location — temp is always live-local, place
   carries its own freshness.
 ## Location (no GPS hardware)
-
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
 (keyless) → Nominatim reverse-geocode (keyless) → city + province on
 screen. First real fix: `-6.59444,106.78900`, `Bogor, Jawa Barat`,
@@ -152,6 +152,16 @@ The Where page speaks human, never engineer: place name (scrolling if
 long), then `Here/Near/Around/Rough` plus `just now/5m ago/2h ago`
 instead of coordinates and meters. Raw lat/lon stay in the USB log.
 Before any fix: `Finding you / one moment`.
+
+## Outdoor weather (no key, no extra hardware)
+
+Open-Meteo forecast API (free for non-commercial use, no key): current
+outdoor temp, humidity, feels-like and WMO condition plus hourly rain
+probability, fetched with the geo fix coordinates right after each
+location update. First live result: `25.4C 88% feels 30.2C Fair rain
+46%`. Cached in NVS with the same stale handling as location. WMO codes
+map to short words (Clear/Fair/Cloudy/Overcast/Fog/Drizzle/Rain/Snow/
+Storm) sized for 16 columns.
 
 ## Build / flash / monitor
 

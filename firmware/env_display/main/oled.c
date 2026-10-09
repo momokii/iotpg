@@ -578,3 +578,40 @@ void oled_show_stats(float temperature, float humidity)
         lcd1602_clock(line0, line1);
     }
 }
+
+void oled_show_wx(const wx_t *wx)
+{
+    char l0[24], l1[32], l2[32];
+    if (!wx->has_data) {
+        snprintf(l0, sizeof(l0), "no sky yet");
+        snprintf(l1, sizeof(l1), "wait for fetch");
+        snprintf(l2, sizeof(l2), "                ");
+    } else {
+        snprintf(l0, sizeof(l0), "Out %.0fC %s", (double)wx->temp, wx->cond);
+        snprintf(l1, sizeof(l1), "Rain %d%%", wx->rain_pct);
+        snprintf(l2, sizeof(l2), "Feels %.0fC%s", (double)wx->feels_like,
+                 wx->stale ? " OLD" : "");
+    }
+    if (s_ok) {
+        oled_text1206(0, 0, "                ");
+        oled_text1206(0, 0, "OUTSIDE");
+        oled_text57(0, 2, l0);
+        oled_text57(0, 3, l1);
+        oled_text57(0, 4, l2);
+        for (uint8_t p = 5; p < 8; p++) {
+            memset(&s_fb[p][0], 0, 128);
+        }
+        oled_update();
+    }
+    if (s_lcd_ok) {
+        char line0[17], line1[17];
+        if (!wx->has_data) {
+            snprintf(line0, sizeof(line0), "no sky yet      ");
+            snprintf(line1, sizeof(line1), "wait for fetch  ");
+        } else {
+            snprintf(line0, sizeof(line0), "%-16.16s", l0);
+            snprintf(line1, sizeof(line1), "%-16.16s", l1);
+        }
+        lcd1602_clock(line0, line1);
+    }
+}

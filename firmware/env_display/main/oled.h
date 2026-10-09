@@ -10,6 +10,7 @@
 #include <time.h>
 #include "esp_err.h"
 #include "geo.h"
+#include "weather.h"
 
 #define OLED_WIDTH  128
 #define OLED_HEIGHT 64
@@ -24,3 +25,4 @@ void oled_show_all(float temperature, float humidity, const struct tm *t, bool e
 void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *quality);
 void oled_show_geo(const geo_fix_t *fix);
 void oled_show_stats(float temperature, float humidity);
+void oled_show_wx(const wx_t *wx);

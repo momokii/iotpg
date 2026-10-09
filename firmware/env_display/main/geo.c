@@ -22,6 +22,7 @@
 #include "cJSON.h"
 #include "geo.h"
 #include "wifi.h"
+#include "weather.h"
 
 static const char *TAG = "geo";
 static const char *UA = "iotpg-esp32/1.0 (learning project)";
@@ -112,6 +113,11 @@ static void geo_task(void *arg)
     vTaskDelay(pdMS_TO_TICKS(15000));
     for (;;) {
         geo_update();
+        geo_fix_t fix = { 0 };
+        geo_get(&fix);
+        if (fix.has_fix) {
+            wx_update(fix.lat, fix.lon);
+        }
         vTaskDelay(pdMS_TO_TICKS(15 * 60 * 1000));
     }
 }
