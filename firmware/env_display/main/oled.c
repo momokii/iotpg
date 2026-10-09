@@ -17,6 +17,8 @@
 #include "font57.h"
 #include "lcd1602.h"
 #include "rtc.h"
+#include "geo.h"
+#include "stats.h"
 #include "stats.h"
 
 #define OLED_SDA_PIN 22
@@ -481,6 +483,11 @@ void oled_show_stats(float temperature, float humidity)
     /* Two views alternate every 4 s so 16 columns stay readable:
      * view A = today's temp range plus trend, view B = humidity range
      * plus dew point. Words, not codes: Today / Feels / Dew point. */
+    /* Three views rotate every 4 s so 16 columns stay readable: view A =
+     * today's temp range plus trend, view B = humidity range plus dew
+     * point, view C = which place these readings belong to, with its
+     * freshness — so stats never silently borrow a stale location.
+     * Words, not codes. */
     static int calls = 0;
     char l0[24], l1[32], l2[32];
     if (!stats_have()) {
@@ -497,12 +504,40 @@ void oled_show_stats(float temperature, float humidity)
         struct tm a = { 0 }, b = { 0 };
         localtime_r(&tmax_t, &a);
         localtime_r(&tmin_t, &b);
-        if ((calls / 4) % 2 == 0) {
+        if ((calls / 4) % 3 == 0) {
             snprintf(l0, sizeof(l0), "Today %.0f-%.0fC %c", tmin, tmax, tr);
             snprintf(l1, sizeof(l1), "Feels %s", word);
-        } else {
+        } else if ((calls / 4) % 3 == 1) {
             snprintf(l0, sizeof(l0), "Hum %.0f-%.0f%%", hmin, hmax);
             snprintf(l1, sizeof(l1), "Dew point %.0fC", (double)dew);
+        } else {
+            geo_fix_t fix = { 0 };
+            geo_get(&fix);
+            if (!fix.has_fix) {
+                snprintf(l0, sizeof(l0), "@?");
+                snprintf(l1, sizeof(l1), "unplaced yet");
+            } else {
+                char city[20] = { 0 };
+                size_t ci = 0;
+                while (fix.place[ci] && fix.place[ci] != ',' && ci < sizeof(city) - 1) {
+                    city[ci] = fix.place[ci];
+                    ci++;
+                }
+                city[ci] = '\0';
+                long age = (long)(time(NULL) - fix.updated);
+                char agestr[12];
+                if (age < 0) {
+                    snprintf(agestr, sizeof(agestr), "--");
+                } else if (age < 60) {
+                    snprintf(agestr, sizeof(agestr), "just now");
+                } else if (age < 3600) {
+                    snprintf(agestr, sizeof(agestr), "%ldm ago", age / 60);
+                } else {
+                    snprintf(agestr, sizeof(agestr), "%ldh ago", age / 3600);
+                }
+                snprintf(l0, sizeof(l0), "@%s", city[0] ? city : "?");
+                snprintf(l1, sizeof(l1), "%s%s", fix.stale ? "OLD " : "", agestr);
+            }
         }
         snprintf(l2, sizeof(l2), "High %02d:%02d Low %02d:%02d",
                  a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);

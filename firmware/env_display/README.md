@@ -131,6 +131,10 @@ sharing GPIO21 with OLED SCL caused intermittent NACKs on both.
 - Written in plain words on purpose: `Today 24-26C ^`, `Feels Comfort`,
   `Hum 44-60%`, `Dew point 18C` — a stranger reads the screen with no
   manual. Long content alternates every 4 s to fit 16 columns.
+- Third rotating view states the place link explicitly (`@Bogor` + `just
+  now` / `5m ago` / `OLD …`, `@?` when never located), so stats can never
+  silently borrow a stale location — temp is always live-local, place
+  carries its own freshness.
 ## Location (no GPS hardware)
 
 WiFi positioning, verified live: scan nearby APs → BeaconDB geolocate
