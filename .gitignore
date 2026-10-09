@@ -29,3 +29,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Machine-local tooling (indexes, session state — never shared)
+# Note: .codegraph is a symlink, so it needs the bare pattern (no slash).
+.codegraph
+.omo/
