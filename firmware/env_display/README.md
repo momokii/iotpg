@@ -33,8 +33,9 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 - Page 3 — stats: today's min/max temp+humidity, trend arrow (^ up,
   v down, - flat vs 10 min ago), comfort word, dew point.
 - Page 4 — outside: outdoor temp + condition word (`Out 25C Fair`),
-  rain chance next hours (`Rain 46%`), feels-like on roomy screens.
-  Same NVS + stale handling as location.
+  rain chance, feels-like on roomy screens.
+- Page 5 — diagnostics: boot count, uptime, heap current/minimum, Wi-Fi
+  status with signal word. Reboot count persists in NVS namespace `diag`.
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.
@@ -154,7 +155,6 @@ instead of coordinates and meters. Raw lat/lon stay in the USB log.
 Before any fix: `Finding you / one moment`.
 
 ## Outdoor weather (no key, no extra hardware)
-
 Open-Meteo forecast API (free for non-commercial use, no key): current
 outdoor temp, humidity, feels-like and WMO condition plus hourly rain
 probability, fetched with the geo fix coordinates right after each
@@ -162,6 +162,28 @@ location update. First live result: `25.4C 88% feels 30.2C Fair rain
 46%`. Cached in NVS with the same stale handling as location. WMO codes
 map to short words (Clear/Fair/Cloudy/Overcast/Fog/Drizzle/Rain/Snow/
 Storm) sized for 16 columns.
+
+## Web dashboard (same WiFi network only)
+
+With WiFi configured, `GET http://<device-ip>/` serves one page with the
+same readings as the screens: local temp/humidity, clock + source, place,
+outdoor condition, WiFi status, uptime/heap/boot count. Find the IP in
+the monitor log (`sta ip:` line after join). No credentials on the page,
+no credentials in the repo — the page contains readings only. When WiFi
+is down or unconfigured the server stays off and the board is unaffected.
+The server follows the link: it stops on disconnect and restarts on the
+next join, all outside event callbacks.
+Known environment limit: shared APs with client isolation (boarding
+houses, cafés) block station-to-station traffic — the board still reaches
+the internet (NTP/geolocation work), but no LAN device can open the page.
+On a normal home AP it just works.
+
+## Storage layout (custom partition table)
+
+`partitions.csv`: NVS and PHY keep stock offsets, factory app is 1.5 MiB
+(the dashboard no longer fits stock 1 MiB; ~32% headroom remains, OTA
+intentionally absent). NVS offsets unchanged, so sensor/location caches
+survive the reflash that installs the new table.
 
 ## Build / flash / monitor
 
