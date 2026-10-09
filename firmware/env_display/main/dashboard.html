@@ -1,0 +1,22 @@
+<!-- No meta refresh: the serving handler controls when the page is rendered. -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Environment</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f6f3;color:#172018;font:16px system-ui,sans-serif}main{max-width:38rem;margin:auto;padding:1rem}.card{background:#fff;border:1px solid #d8ddd5;border-radius:.6rem;padding:1rem;margin:.75rem 0;box-shadow:0 1px 2px #0001}h1,h2,p{margin:.25rem 0}h1{font-size:1.35rem}h2{font-size:1rem;color:#496044}.value{font-size:1.3rem;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.muted{color:#5d675c;font-size:.9rem}.note{border-left:3px solid #809477;padding-left:.6rem}
+  </style>
+</head>
+<body>
+  <main>
+    <header><h1>Environment</h1><p class="muted">{{TIME}} · {{DATE}} · {{SRC}}</p></header>
+    <section class="card"><h2>HERE</h2><p>{{PLACE}}</p><div class="grid"><p>Temp <strong class="value">{{TEMP}}</strong></p><p>Hum <strong class="value">{{HUM}}</strong></p></div></section>
+    <section class="card"><h2>OUTSIDE</h2><p>Out <strong class="value">{{OUT_TEMP}}</strong> {{OUT_COND}}</p><p>Rain {{RAIN}}</p></section>
+    <section class="card"><h2>WIFI</h2><p>{{SSID}}</p><p>{{WIFI_STATE}} · Signal: <strong>{{RSSI}}</strong></p></section>
+    <section class="card"><h2>DIAGNOSTICS</h2><p>Uptime {{UPTIME}}</p><p>Heap {{HEAP}} · Reboots {{BOOTS}}</p></section>
+    <section class="card muted note"><h2>UNAVAILABLE</h2><p>DHT ERR · Finding you, one moment · no sky yet, wait for fetch · Not connected</p><p>Signal words: Strong, Good, OK, Weak</p></section>
+  </main>
+</body>
+</html>
