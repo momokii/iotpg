@@ -417,6 +417,10 @@ static void marquee(char *dst, size_t dstsz, const char *text, size_t width, mar
 
 void oled_show_geo(const geo_fix_t *fix)
 {
+    /* Info line alternates every 4 s: human words first (Near 5m ago),
+     * then what the accuracy figure means (within 25km) — so the km
+     * number always arrives with its explanation attached. */
+    static int gcalls = 0;
     static marquee_t m_big = { 0, 1, 0 };
     static marquee_t m_small = { 0, 1, 0 };
     char l0[24], l1[32], l2[32];
@@ -424,6 +428,7 @@ void oled_show_geo(const geo_fix_t *fix)
         snprintf(l0, sizeof(l0), "Finding you");
         snprintf(l1, sizeof(l1), "one moment");
         snprintf(l2, sizeof(l2), "                ");
+        gcalls = 0;
     } else {
         long age = (long)(time(NULL) - fix->updated);
         char agestr[12];
@@ -451,9 +456,16 @@ void oled_show_geo(const geo_fix_t *fix)
         char win_big[24], win_small[20];
         marquee(win_big, sizeof(win_big), place, 21, &m_big);
         marquee(win_small, sizeof(win_small), place, 16, &m_small);
+        char within[20];
+        if (fix->accuracy_m >= 1000) {
+            snprintf(within, sizeof(within), "within %.0fkm", (double)fix->accuracy_m / 1000);
+        } else {
+            snprintf(within, sizeof(within), "within %dm", (int)fix->accuracy_m);
+        }
         snprintf(l0, sizeof(l0), "%s", win_big);
-        snprintf(l1, sizeof(l1), "%s", info);
+        snprintf(l1, sizeof(l1), "%s", ((gcalls / 4) % 2 == 0) ? info : within);
         snprintf(l2, sizeof(l2), "%s", win_small);
+        gcalls++;
     }
     if (s_ok) {
         oled_text1206(0, 0, "                ");

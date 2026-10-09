@@ -144,6 +144,10 @@ screen. First real fix: `-6.59444,106.78900`, `Bogor, Jawa Barat`,
 accuracy radius always says how much to trust. Lookups run 15 s after
 boot then every 15 min; the last fix persists in NVS across reboots.
 
+The Where info line alternates every 4 s: human words first (`Near 5m
+ago`), then what the figure means (`within 25km`) — the km number never
+appears without its explanation. Raw lat/lon stay in the USB log.
+
 The Where page speaks human, never engineer: place name (scrolling if
 long), then `Here/Near/Around/Rough` plus `just now/5m ago/2h ago`
 instead of coordinates and meters. Raw lat/lon stay in the USB log.

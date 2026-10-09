@@ -25,6 +25,7 @@
 | TASK-021 | Humanize Where page (plain words, scrolling names, new glyphs) | Low | DONE (Here/Near/Around/Rough + just now/5m ago; verified boot on monitor) | S | TASK-016 | Human copy + font coverage in `firmware/env_display` | Non-technical readers understand every line | None |
 | TASK-022 | Self-explanatory Stats page (plain words, alternating views) | Low | DONE (Today/Feels/Dew point wording; verified boot on monitor) | S | TASK-019 | Human copy in `firmware/env_display` | A stranger reads the screen with no manual | None |
 | TASK-023 | Stats states its place link (third view with @place + freshness) | Low | DONE (verified boot on monitor; user to confirm glass) | S | TASK-022 | Place-linked stats in `firmware/env_display` | Stats never silently borrow a stale location | None |
+| TASK-024 | Where info alternates human words with within-Xkm explainer | Low | DONE (verified boot on monitor) | S | TASK-016 | Explainer line in `firmware/env_display` | km figure never appears without its meaning | None |
 | TASK-019 | Stats page: min/max + trend + comfort + dew point | Medium | DONE (NVS restore verified on boot; user to confirm glass on page 3) | M | TASK-007 | Stats module + page in `firmware/env_display` | Extremes survive reboot; comfort grounded in ASHRAE bands | None |
 | TASK-018 | Re-sync clock immediately on WiFi reconnect | Low | DONE (restart SNTP on first IP after a drop; boot verified, drop test left to user) | S | TASK-009 | Reconnect handling in `firmware/env_display` | Clock self-heals seconds after Wi-Fi returns | None |
 
