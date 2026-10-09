@@ -64,11 +64,16 @@ bool time_is_ntp(void)
     return s_ntp;
 }
 
-bool wifi_sntp_sync(void)
+bool wifi_is_configured(void)
 {
-    if (CONFIG_WIFI_SSID[0] == '\0') {
-        ESP_LOGI(TAG, "no SSID configured — skipping WiFi, time from RTC/internal");
-        return false;
+    return CONFIG_WIFI_SSID[0] != '\0';
+}
+
+static void init_nvs_once(void)
+{
+    static bool initialized = false;
+    if (initialized) {
+        return;
     }
 
     esp_err_t err = nvs_flash_init();
@@ -77,6 +82,18 @@ bool wifi_sntp_sync(void)
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK(err);
+    initialized = true;
+}
+
+bool wifi_sntp_sync(void)
+{
+    init_nvs_once();
+
+    if (!wifi_is_configured()) {
+        ESP_LOGI(TAG, "no SSID configured — skipping WiFi, time from RTC/internal");
+        return false;
+    }
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();

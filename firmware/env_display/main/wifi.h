@@ -19,5 +19,7 @@ typedef struct {
 } wifi_status_t;
 
 bool wifi_sntp_sync(void);
+/* Returns true when CONFIG_WIFI_SSID is non-empty. */
+bool wifi_is_configured(void);
 bool time_is_ntp(void);
 void wifi_get_status(wifi_status_t *out);
