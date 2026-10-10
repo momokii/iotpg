@@ -7,6 +7,11 @@ backpack. The firmware auto-discovers displays — see below.
 - **Board:** classic ESP32 (ESP32-D0WD-V3), `set-target esp32`.
 - **Status:** sensor + 1602 LCD verified (see log below); SSD1306 path written
   but not yet seen live. Closed as TASK-007 after visual confirmation.
+- **Wave 5 (dashboard + diagnostics + partitions):** verified live on-device
+  — full-page render with zero leftover markers, HTTP 200 serving the same
+  bytes, drop/rejoin recovery with NTP re-sync, all six page renderers
+  through the real switch, clean rebuild with 0 warnings — and reviewed to
+  sign-off. Closed as TASK-026.
 
 ## Screens
 
@@ -35,7 +40,10 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
 - Page 4 — outside: outdoor temp + condition word (`Out 25C Fair`),
   rain chance, feels-like on roomy screens.
 - Page 5 — diagnostics: boot count, uptime, heap current/minimum, Wi-Fi
-  status with signal word. Reboot count persists in NVS namespace `diag`.
+  status with signal word. Reboot count persists in NVS namespace `diag`
+  (watch `diag: boot #N` climb in the monitor log across reboots; NVS
+  offsets are unchanged by the partition table below, so the count
+  survives reflashes too).
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.
@@ -167,12 +175,18 @@ Storm) sized for 16 columns.
 
 With WiFi configured, `GET http://<device-ip>/` serves one page with the
 same readings as the screens: local temp/humidity, clock + source, place,
-outdoor condition, WiFi status, uptime/heap/boot count. Find the IP in
-the monitor log (`sta ip:` line after join). No credentials on the page,
-no credentials in the repo — the page contains readings only. When WiFi
+outdoor condition, WiFi status, uptime/heap/boot count. The firmware does
+not print its own IP, so find it in your router's DHCP client list (or
+scan the LAN, e.g. `nmap -sn 192.168.0.0/24`); the monitor log confirms
+the server itself with `dashboard: server started` after each join.
+No credentials on the page, no credentials in the repo — the page
+contains readings only (15 `{{PLACEHOLDERS}}` substituted with live
+values; a render with leftovers is a bug, none observed). When WiFi
 is down or unconfigured the server stays off and the board is unaffected.
-The server follows the link: it stops on disconnect and restarts on the
-next join, all outside event callbacks.
+The server follows the link: it stops on disconnect (`WiFi disconnected;
+stopping server`) and restarts on the next join, all in a dedicated
+lifecycle task outside event callbacks — verified live through a forced
+drop: stop → auto-restart → HTTP 200 with full content again.
 Known environment limit: shared APs with client isolation (boarding
 houses, cafés) block station-to-station traffic — the board still reaches
 the internet (NTP/geolocation work), but no LAN device can open the page.
@@ -195,4 +209,6 @@ idf.py -C firmware/env_display -p /dev/ttyUSB0 flash monitor
 ```
 
 Expected monitor output: `Display ACK at 0x.. on SDA=.. SCL=..`,
-`<driver> ready`, then `Temp: 25.0 C Hum: 42.0 %` every 2 s.
+`<driver> ready`, then `Temp: 25.0 C Hum: 42.0 %` every 2 s. With WiFi
+configured you also see `wifi: joined, ...`, `NTP sync acquired`, and
+`dashboard: server started`; `diag: boot #N` confirms the boot counter.
