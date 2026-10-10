@@ -378,6 +378,7 @@ void oled_show_wifi(const char *ssid, bool connected, int rssi_dbm, const char *
 
 void oled_show_diag(const diag_snapshot_t *diag)
 {
+    static int calls = 0;
     if (diag == NULL) {
         return;
     }
@@ -417,20 +418,31 @@ void oled_show_diag(const diag_snapshot_t *diag)
         oled_update();
     }
     if (s_lcd_ok) {
-        char lcd_uptime[40], lcd_status[48], line0[17], line1[17];
+        char line0[17], line1[17], up[40];
         if (uptime_hours > 0) {
-            snprintf(lcd_uptime, sizeof(lcd_uptime), "U:%lluh H:%luK", uptime_hours,
-                     (unsigned long)(diag->free_heap_bytes / 1024));
+            snprintf(up, sizeof(up), "Up %lluh %llum", uptime_hours, uptime_minutes % 60);
         } else {
-            snprintf(lcd_uptime, sizeof(lcd_uptime), "U:%llum H:%luK", uptime_minutes,
-                     (unsigned long)(diag->free_heap_bytes / 1024));
+            snprintf(up, sizeof(up), "Up %llum %llus", uptime_minutes, uptime_seconds % 60);
         }
-        snprintf(lcd_status, sizeof(lcd_status), "R%lu %s", (unsigned long)diag->reboot_count,
-                 wifi);
-        snprintf(line0, sizeof(line0), "%-16.16s", lcd_uptime);
-        snprintf(line1, sizeof(line1), "%-16.16s", lcd_status);
+        if ((calls / 4) % 3 == 0) {
+            snprintf(line0, sizeof(line0), "Boots: %lu", (unsigned long)diag->reboot_count);
+            snprintf(line1, sizeof(line1), "%-16.16s", up);
+        } else if ((calls / 4) % 3 == 1) {
+            snprintf(line0, sizeof(line0), "Memory: %luK",
+                     (unsigned long)(diag->free_heap_bytes / 1024));
+            snprintf(line1, sizeof(line1), "Lowest: %luK",
+                     (unsigned long)(diag->minimum_free_heap_bytes / 1024));
+        } else if (diag->wifi.connected) {
+            snprintf(line0, sizeof(line0), "WiFi: %s",
+                     diag->wifi.quality ? diag->wifi.quality : "Unknown");
+            snprintf(line1, sizeof(line1), "%-16.16s", diag->wifi.ssid);
+        } else {
+            snprintf(line0, sizeof(line0), "Not connected");
+            snprintf(line1, sizeof(line1), "will retry");
+        }
         lcd1602_clock(line0, line1);
     }
+    calls++;
 }
 
 /* Marquee: long place names scroll in a width-sized window, bouncing

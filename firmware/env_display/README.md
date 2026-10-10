@@ -43,7 +43,10 @@ Clock shows hours:minutes only (Jakarta/WIB time, no seconds), plus date:
   status with signal word. Reboot count persists in NVS namespace `diag`
   (watch `diag: boot #N` climb in the monitor log across reboots; NVS
   offsets are unchanged by the partition table below, so the count
-  survives reflashes too).
+  survives reflashes too). On the 1602 LCD the page rotates in plain
+  words every few seconds: `Boots: N` / `Up Xh Ym`, then `Memory: NK`
+  / `Lowest: NK`, then `WiFi: Strong` / network name (`Not connected`
+  / `will retry` when down).
 - Short press: toggles WIB/UTC timezone. Long hold (~1.5 s): flips pages.
   Fire-on-threshold for hold, fire-on-release for short — the standard
   single-button pattern; more pages slot into the `page` switch.
